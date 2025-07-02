@@ -11,7 +11,6 @@ const STATUS_COLORS = {
 };
 
 export default function AdminTasks() {
-    // This correctly reads the numerical IDs that will be stored by the updated CreateTask page.
     const createdTaskIds = JSON.parse(localStorage.getItem("createdTaskIds") || "[]");
 
     const { data: tasks = [], isLoading, error } = useQuery({
@@ -30,8 +29,9 @@ export default function AdminTasks() {
                     <h1 className="text-3xl font-semibold text-gray-800">Assigned Tasks Overview</h1>
                     <p className="text-gray-500 mt-1">A view of all tasks you have created and assigned.</p>
                 </div>
+                {/* FIX: Corrected link to point to the proper route */}
                 <Link 
-                    to="/create-task" 
+                    to="/tasks/create" 
                     className="px-5 py-2 text-white bg-blue-600 rounded-lg font-medium shadow-sm hover:bg-blue-700 focus:outline-none"
                 >
                     + Create New Task
@@ -59,7 +59,6 @@ export default function AdminTasks() {
                                 tasks.map(task => (
                                     <tr key={task.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {/* This correctly links to the task using its numerical ID */}
                                             <Link to={`/tasks/${task.id}`} className="text-blue-600 hover:underline">
                                                 {task.fields["Task Name"]}
                                             </Link>
