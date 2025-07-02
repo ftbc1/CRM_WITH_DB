@@ -1,9 +1,10 @@
 import React, { useState, Fragment } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTask, fetchAllUsers, fetchProjectsByIds } from "../api";
+import { createTask, fetchAllUsers, fetchProjectsByIds, updateUser } from "../api";
 import { useNavigate } from "react-router-dom";
 import { Listbox, Transition } from "@headlessui/react";
-import { CheckIcon, ChevronUpDownIcon, User, Briefcase, Calendar, Type } from "lucide-react";
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import { User, Briefcase, Calendar } from "lucide-react";
 
 const TASK_STATUS_OPTIONS = ["To Do", "In Progress", "Done", "Blocked"];
 
@@ -41,14 +42,25 @@ export default function CreateTask() {
   const createTaskMutation = useMutation({
     mutationFn: (taskData) => createTask({
       ...taskData,
-      "Project": taskData["Project"]?.id, // Send numerical ID
-      "Assigned To": taskData["Assigned To"]?.id, // Send user airtable_id
+      "Project": taskData["Project"]?.id,
+      "Assigned To": taskData["Assigned To"]?.id,
       "Created By": createdByUserId,
     }),
-    onSuccess: () => {
+    onSuccess: (newTask) => {
+      const prevCreatedTaskIds = JSON.parse(localStorage.getItem("createdTaskIds") || "[]");
+      const newCreatedTaskIds = [...new Set([...prevCreatedTaskIds, newTask.id])];
+      localStorage.setItem("createdTaskIds", JSON.stringify(newCreatedTaskIds));
+      
+      const assignedToUser = fields["Assigned To"];
+      if (assignedToUser) {
+          const prevAssignedTasks = JSON.parse(localStorage.getItem(`assignedTaskIds_${assignedToUser.id}`) || "[]");
+          const newAssignedTasks = [...new Set([...prevAssignedTasks, newTask.id])];
+          localStorage.setItem(`assignedTaskIds_${assignedToUser.id}`, JSON.stringify(newAssignedTasks));
+      }
+
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['adminCreatedTasks'] });
-      navigate('/tasks');
+      navigate('/admin-tasks');
     },
     onError: (err) => {
       setError(err.message || "Failed to create task. Please try again.");
@@ -101,7 +113,6 @@ export default function CreateTask() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Assign To Dropdown */}
             <Listbox value={fields["Assigned To"]} onChange={value => setFields(f => ({ ...f, "Assigned To": value }))}>
               {({ open }) => (
                 <div>
@@ -135,7 +146,6 @@ export default function CreateTask() {
               )}
             </Listbox>
 
-            {/* Project Dropdown */}
             <Listbox value={fields["Project"]} onChange={value => setFields(f => ({ ...f, "Project": value }))}>
               {({ open }) => (
                 <div>
