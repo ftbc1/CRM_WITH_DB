@@ -106,7 +106,8 @@ export default function ProjectDetail() {
 
   const name = project.fields["Project Name"] || "Unnamed Project";
   const accountName = project.fields["Account Name (from Account)"]?.[0] || "N/A";
-  const accountId = project.fields.Account?.[0];
+  // Use the Account's Airtable ID for the link, assuming it's a lookup field.
+  const accountAirtableId = project.fields["Account Airtable ID"]?.[0];
 
 
   return (
@@ -129,8 +130,8 @@ export default function ProjectDetail() {
                 <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
                 <p className="text-sm text-gray-600 mt-1">
                   Account:{" "}
-                  {accountId ? (
-                    <Link to={`/accounts/${accountId}`} className="font-medium text-blue-600 hover:underline">
+                  {accountAirtableId ? (
+                    <Link to={`/accounts/${accountAirtableId}`} className="font-medium text-blue-600 hover:underline">
                       {accountName}
                     </Link>
                   ) : (
