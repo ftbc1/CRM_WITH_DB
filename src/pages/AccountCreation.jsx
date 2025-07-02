@@ -157,7 +157,7 @@ export default function AccountCreation() {
               className={`rounded-lg px-8 py-3 text-white text-lg font-semibold shadow-sm transition ${
                 loading
                   ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-500 hover:bg-gray-700"
               }`}
             >
               {loading ? "Creating..." : "Create Account"}
