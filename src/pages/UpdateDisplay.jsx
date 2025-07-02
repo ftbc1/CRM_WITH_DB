@@ -2,6 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 export default function UpdateDisplay({ update, userName, expanded, onExpand }) {
+  // FIX: Add a guard clause to prevent crash if update or update.fields is undefined
+  if (!update || !update.fields) {
+    return null; // or render a placeholder
+  }
+
   const notes = update.fields.Notes || "";
   const displayNotes = expanded || notes.length < 150 ? notes : `${notes.substring(0, 150)}...`;
 
