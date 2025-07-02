@@ -106,6 +106,8 @@ export default function ProjectDetail() {
 
   const name = project.fields["Project Name"] || "Unnamed Project";
   const accountName = project.fields["Account Name (from Account)"]?.[0] || "N/A";
+  const accountId = project.fields.Account?.[0];
+
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -126,7 +128,14 @@ export default function ProjectDetail() {
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
                 <p className="text-sm text-gray-600 mt-1">
-                    Account: <span className="font-medium text-gray-800">{accountName}</span>
+                  Account:{" "}
+                  {accountId ? (
+                    <Link to={`/accounts/${accountId}`} className="font-medium text-blue-600 hover:underline">
+                      {accountName}
+                    </Link>
+                  ) : (
+                    <span className="font-medium text-gray-800">{accountName}</span>
+                  )}
                 </p>
             </div>
              {isSuccess && (
