@@ -11,6 +11,7 @@ const STATUS_COLORS = {
 };
 
 export default function AdminTasks() {
+    // This correctly reads the numerical IDs that will be stored by the updated CreateTask page.
     const createdTaskIds = JSON.parse(localStorage.getItem("createdTaskIds") || "[]");
 
     const { data: tasks = [], isLoading, error } = useQuery({
@@ -23,17 +24,15 @@ export default function AdminTasks() {
     if (error) return <div className="text-center py-20 text-red-500">Error loading tasks: {error.message}</div>;
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* --- THIS IS THE UPDATED HEADER SECTION --- */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-semibold text-gray-800">Assigned Tasks Overview</h1>
                     <p className="text-gray-500 mt-1">A view of all tasks you have created and assigned.</p>
                 </div>
-                {/* This Link acts as a button to navigate to the task creation page. */}
                 <Link 
                     to="/create-task" 
-                    className="px-5 py-2 text-white bg-gray-500 rounded-lg font-medium shadow-sm hover:bg-gray-700 focus:outline-none"
+                    className="px-5 py-2 text-white bg-blue-600 rounded-lg font-medium shadow-sm hover:bg-blue-700 focus:outline-none"
                 >
                     + Create New Task
                 </Link>
@@ -60,10 +59,11 @@ export default function AdminTasks() {
                                 tasks.map(task => (
                                     <tr key={task.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            <Link to={`/tasks/${task.id}`} className="text-primary hover:underline">
+                                            {/* This correctly links to the task using its numerical ID */}
+                                            <Link to={`/tasks/${task.id}`} className="text-blue-600 hover:underline">
                                                 {task.fields["Task Name"]}
                                             </Link>
-                                            </td>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.fields["Assigned To Name"]?.[0]}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.fields["Project Name"]?.[0]}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.fields["Due Date"]}</td>
