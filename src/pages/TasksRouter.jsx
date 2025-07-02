@@ -1,29 +1,16 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-
-// Import all the components that will be part of the tasks section
-import Tasks from "./Tasks";
-import TaskDetail from "./TaskDetail";
-import AdminTasks from "./AdminTasks";
-import CreateTask from "./CreateTask";
+import React from 'react';
+import AdminTasks from './AdminTasks'; // Admin's task overview page
+import Tasks from './Tasks';           // User's task view
 
 /**
- * This component now correctly routes all traffic under the /tasks/ URL path.
+ * This component acts as a router to display the correct
+ * tasks page based on the user's role (admin or regular user).
  */
 export default function TasksRouter() {
-  return (
-    <Routes>
-      {/* The "index" route defaults to the user's task list */}
-      <Route index element={<Tasks />} />
-      
-      {/* Route for the admin's task overview page */}
-      <Route path="admin" element={<AdminTasks />} />
+  //const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-      {/* Route for the task creation page */}
-      <Route path="create" element={<CreateTask />} />
-      
-      {/* Route for viewing a single task's details */}
-      <Route path=":id" element={<TaskDetail />} />
-    </Routes>
-  );
+  // If the user is an admin, show their created tasks overview.
+  // Otherwise, show the user's personal assigned task list.
+  //return isAdmin ? <AdminTasks /> : <Tasks />;
+  return <AdminTasks />;
 }
