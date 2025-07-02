@@ -232,7 +232,7 @@ export default function UpdateCreation() {
               className={`rounded-lg px-8 py-3 text-white text-lg font-semibold shadow-sm transition ${
                 loading
                   ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-600 hover:bg-gray-700"
               }`}
             >
               {loading ? "Creating..." : "Create Update"}

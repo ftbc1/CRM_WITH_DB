@@ -25,7 +25,7 @@ export default function Updates() {
       <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
         <h2 className="text-2xl font-bold mb-2">No Updates Found</h2>
         <p>You have not created or been assigned any updates yet.</p>
-        <Link to="/update-creation" className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <Link to="/update-creation" className="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
           Create Your First Update
         </Link>
       </div>
@@ -36,7 +36,7 @@ export default function Updates() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-semibold text-gray-800">My Updates</h1>
-        <Link to="/update-creation" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-sm">
+        <Link to="/update-creation" className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold shadow-sm">
           + New Update
         </Link>
       </div>

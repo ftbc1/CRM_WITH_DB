@@ -271,7 +271,7 @@ export default function AccountCreationProjectModal({ open, onClose, defaultAcco
             className={`w-full py-3 px-6 rounded-xl font-semibold text-white transition-all ${
               loading 
                 ? "bg-gray-400 cursor-not-allowed" 
-                : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+                : "bg-gradient-to-r from-gray-600 to-purple-600 hover:from-gray-700 hover:to-purple-700 shadow-lg"
             }`}
           >
             {loading ? "Creating Project..." : "Create Project"}
