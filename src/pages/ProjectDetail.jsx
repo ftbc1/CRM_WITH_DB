@@ -20,7 +20,6 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const queryClient = useQueryClient();
 
-  // State for form fields
   const [fields, setFields] = useState({
     "Project Status": "",
     "Start Date": "",
@@ -29,14 +28,12 @@ export default function ProjectDetail() {
     "Project Description": "",
   });
 
-  // Fetching project data
   const { data: project, isLoading, error: fetchError } = useQuery({
     queryKey: ["project", id],
     queryFn: () => fetchProjectById(id),
     enabled: !!id,
   });
 
-  // Effect to populate form fields when project data is loaded
   useEffect(() => {
     if (project?.fields) {
       setFields({
@@ -49,7 +46,6 @@ export default function ProjectDetail() {
     }
   }, [project]);
 
-  // Mutation for updating the project
   const { mutate: updateProject, isLoading: isUpdating, isSuccess, error: updateError } = useMutation({
     mutationFn: (updatedFields) => updateRecord("Projects", id, updatedFields),
     onSuccess: () => {
@@ -69,7 +65,6 @@ export default function ProjectDetail() {
     });
   };
 
-  // Fetching related updates and tasks
   const updateIds = project?.fields?.Updates || [];
   const { data: updates, isLoading: updatesLoading } = useQuery({
     queryKey: ["projectUpdates", updateIds],
@@ -104,11 +99,7 @@ export default function ProjectDetail() {
 
   const name = project.fields["Project Name"] || "Unnamed Project";
   const accountName = project.fields["Account Name (from Account)"]?.[0] || "N/A";
-  
-  // Based on your database schema, the column is `airtable_id`.
-  // A common lookup field name pattern for this is "airtable_id (from Account)".
-  // Please verify this is the correct field name from your API's response.
-  const accountAirtableId = project.fields["airtable_id (from Account)"]?.[0];
+  const accountId = project.fields.Account?.[0]; // This is the numerical account ID
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -130,8 +121,8 @@ export default function ProjectDetail() {
                 <h1 className="text-2xl font-bold text-gray-900">{name}</h1>
                 <p className="text-sm text-gray-600 mt-1">
                   Account:{" "}
-                  {accountAirtableId ? (
-                    <Link to={`/accounts/${accountAirtableId}`} className="font-medium text-blue-600 hover:underline">
+                  {accountId ? (
+                    <Link to={`/accounts/${accountId}`} className="font-medium text-blue-600 hover:underline">
                       {accountName}
                     </Link>
                   ) : (
@@ -147,7 +138,6 @@ export default function ProjectDetail() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            {/* Project Status */}
             <div>
                 <label className="text-sm text-gray-700 font-medium mb-1 block">Project Status</label>
                  <Listbox value={fields["Project Status"]} onChange={value => setFields(f => ({ ...f, "Project Status": value }))}>
@@ -180,7 +170,6 @@ export default function ProjectDetail() {
                 </Listbox>
             </div>
 
-            {/* Project Value */}
             <div>
                 <label className="text-sm text-gray-700 font-medium mb-1 block">Project Value ($)</label>
                 <input
@@ -193,7 +182,6 @@ export default function ProjectDetail() {
                 />
             </div>
 
-            {/* Start Date */}
             <div>
                 <label className="text-sm text-gray-700 font-medium mb-1 block">Start Date</label>
                 <input
@@ -204,7 +192,6 @@ export default function ProjectDetail() {
                 />
             </div>
 
-            {/* End Date */}
             <div>
                 <label className="text-sm text-gray-700 font-medium mb-1 block">End Date</label>
                 <input
@@ -215,7 +202,6 @@ export default function ProjectDetail() {
                 />
             </div>
             
-            {/* Project Description */}
             <div className="md:col-span-2">
                 <label className="text-sm text-gray-700 font-medium mb-1 block">Project Description</label>
                 <textarea

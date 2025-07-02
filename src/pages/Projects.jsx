@@ -9,9 +9,8 @@ import {
   formatDateForAirtable,
 } from "../api";
 import { Listbox, Transition } from "@headlessui/react";
-import { Fragment } from 'react'; // Add explicit Fragment import
+import { Fragment } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { Link } from "react-router-dom";
 import ProjectCard from "./ProjectCard";
 import UpdateDisplay from "./UpdateDisplay";
 
@@ -61,7 +60,6 @@ export default function Projects() {
   const updateOwnerId = localStorage.getItem("userRecordId") || "";
   const userName = localStorage.getItem("userName") || "Current User";
   
-  // Fix: Initialize project IDs with useState and initializer function to avoid recreating the array on every render
   const [projectIds] = useState(() => JSON.parse(localStorage.getItem("projectIds") || "[]"));
 
   const {
@@ -70,7 +68,7 @@ export default function Projects() {
     error: projectsError,
   } = useQuery({
     queryKey: ["projects", projectIds],
-    queryFn: () => fetchProjectsByIds(projectIds),
+    queryFn: () => fetchProjectsByIds(projectIds), // Now fetches using numerical IDs
     enabled: projectIds.length > 0,
   });
 
@@ -83,7 +81,6 @@ export default function Projects() {
     queryFn: async () => fetchAllUpdates(),
   });
 
-  // Fix: Memoize the processed updates to avoid recalculation on every render
   const processedUpdates = useMemo(() => {
     if (allUpdates.length > 0 && projectIds.length > 0) {
       return processUpdatesByProject(allUpdates, projectIds);
@@ -91,9 +88,7 @@ export default function Projects() {
     return {};
   }, [allUpdates, projectIds]);
 
-  // Fix: Update useEffect to use memoized values and avoid unnecessary recalculations
   useEffect(() => {
-    // Only run this effect when necessary data is available and not loading
     if (allUpdates.length > 0 && projectIds.length > 0 && !updatesLoading) {
       const formattedDate = formatDateForAirtable(selectedDate);
       
@@ -113,12 +108,13 @@ export default function Projects() {
 
   const createUpdateMutation = useMutation({
     mutationFn: async ({ projectId, notes, updateType }) => {
+      // NOTE: The 'Project' field now expects a single numerical ID, not an array.
       const update = await createUpdate({
         Notes: notes,
         Date: selectedDate,
         "Update Type": updateType,
-        Project: [projectId],
-        "Update Owner": updateOwnerId ? [updateOwnerId] : [],
+        Project: projectId,
+        "Update Owner": updateOwnerId, // This is still the user's airtable_id
       });
 
       if (update && update.id && updateOwnerId) {
@@ -126,18 +122,17 @@ export default function Projects() {
           localStorage.getItem("updateIds") || "[]"
         );
         const updatedUpdates = [...new Set([...prevUpdates, update.id])];
+        // The updateUser function still correctly uses the user's airtable_id
         await updateUser(updateOwnerId, { Updates: updatedUpdates });
         localStorage.setItem("updateIds", JSON.stringify(updatedUpdates));
       }
 
       return update;
     },
-    onSuccess: (data, variables) => { // The onSuccess callback provides access to the variables sent to the mutation
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["allUpdates"]);
-      // Set the ID of the project that was just updated
       setSuccessProjectId(variables.projectId);
       
-      // Clear the success message after 3 seconds
       setTimeout(() => {
         setSuccessProjectId(null);
       }, 3000);

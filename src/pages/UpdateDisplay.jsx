@@ -1,34 +1,30 @@
-import React from 'react';
+import React from "react";
+import { Link } from "react-router-dom";
 
-// A simple helper to format the date nicely
-function formatDate(dateString) {
-  if (!dateString) return "No date";
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-export default function UpdateDisplay({ update, userName }) {
-  // Destructure directly from the 'update' object
-  const { notes, update_type: updateType, date } = update;
-
-  const formattedDate = formatDate(date);
+export default function UpdateDisplay({ update, userName, expanded, onExpand }) {
+  const notes = update.fields.Notes || "";
+  const displayNotes = expanded || notes.length < 150 ? notes : `${notes.substring(0, 150)}...`;
 
   return (
-    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-      <div className="flex justify-between items-start">
-        <p className="text-gray-800 text-sm whitespace-pre-wrap flex-1">{notes || "No notes for this update."}</p>
-        <div className="ml-4 text-right flex-shrink-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-white bg-gray-400 px-2 py-1 rounded-full">
-            {updateType || "Update"}
-          </span>
-        </div>
+    <div className="bg-gray-50 rounded-lg p-3 text-sm border">
+      <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
+        <span>
+          <strong>By:</strong> {update.fields["Update Owner Name"] || userName}
+        </span>
+        <span>
+          <strong>Date:</strong> {new Date(update.fields.Date).toLocaleDateString()}
+        </span>
       </div>
-      <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200 flex justify-between">
-        <span>By: <span className="font-semibold">{userName}</span></span>
-        <span>{formattedDate}</span>
+      <p className="text-gray-800 whitespace-pre-wrap">{displayNotes}</p>
+      <div className="flex justify-end gap-4 mt-2">
+        {!expanded && notes.length > 150 && (
+          <button onClick={onExpand} className="text-xs text-blue-600 hover:underline font-semibold">
+            Show More
+          </button>
+        )}
+        <Link to={`/updates/${update.id}`} className="text-xs text-blue-600 hover:underline font-semibold">
+          Details
+        </Link>
       </div>
     </div>
   );

@@ -1,5 +1,3 @@
-
-
 // Generic API request helper for your new backend
 async function apiRequest(path, options = {}) {
   const url = `/api/${path}`;
@@ -25,7 +23,7 @@ async function apiRequest(path, options = {}) {
 // =================================================================
 
 const formatAccount = (acc) => ({
-    id: acc.airtable_id,
+    id: acc.id, // Use numerical id
     fields: {
         "Account Name": acc.account_name,
         "Account Description": acc.account_description,
@@ -35,7 +33,7 @@ const formatAccount = (acc) => ({
 });
 
 const formatProject = (proj) => ({
-    id: proj.airtable_id,
+    id: proj.id, // Use numerical id
     fields: {
         "Project Name": proj.project_name,
         "Project Status": proj.project_status,
@@ -50,29 +48,28 @@ const formatProject = (proj) => ({
 });
 
 const formatTask = (task) => ({
-    id: task.airtable_id,
+    id: task.id, // Use numerical id
     fields: {
         "Task Name": task.task_name,
         "Description": task.description,
         "Status": task.status,
         "Due Date": task.due_date,
-        "Project": task.project_airtable_id ? [task.project_airtable_id] : [],
+        "Project": task.project_id ? [task.project_id] : [],
         "Project Name": task.project_name ? [task.project_name] : [],
         "Assigned To": task.assigned_to_id ? [task.assigned_to_id] : [],
         "Assigned To Name": task.assigned_to_name ? [task.assigned_to_name] : [],
-        "Updates": task.updates || [], // This line will now receive the data
+        "Updates": task.updates || [],
     }
 });
 
 const formatUpdate = (update) => ({
-    id: update.airtable_id,
+    id: update.id, // Use numerical id
     fields: {
         "Notes": update.notes,
         "Date": update.date,
         "Update Type": update.update_type,
-        // Use the correct airtable_id for linking
-        "Project": update.project_airtable_id ? [update.project_airtable_id] : [],
-        "Task": update.task_airtable_id ? [update.task_airtable_id] : [],
+        "Project": update.project_id ? [update.project_id] : [],
+        "Task": update.task_id ? [update.task_id] : [],
         "Update Owner Name": update.update_owner_name ? [update.update_owner_name] : [],
         "Project Name": update.project_name,
         "Task Name": update.task_name,
@@ -84,14 +81,15 @@ const formatUpdate = (update) => ({
 // RE-IMPLEMENTED API FUNCTIONS
 // =================================================================
 
-// === USER AUTH ===
+// === USER AUTH (Unchanged) ===
 export async function fetchUserBySecretKey(secretKey) {
   try {
+    // This still uses the `airtable_id` as the secret key
     const userFromDb = await apiRequest(`users/by-secret-key/${secretKey}`);
     if (!userFromDb) return null;
     
     return {
-      id: userFromDb.airtable_id,
+      id: userFromDb.airtable_id, // The user's primary ID on the frontend is their airtable_id
       fields: {
         "User Name": userFromDb.user_name,
         "Accounts": userFromDb.accounts,
@@ -107,14 +105,9 @@ export async function fetchUserBySecretKey(secretKey) {
   }
 }
 
-export async function fetchUserById(id) {
-    const user = await apiRequest(`users/${id}`);
-    // You would create a formatUser helper if needed, for now this is fine
-    return { id: user.airtable_id, fields: user };
-}
-
 export async function fetchAllUsers() {
     const users = await apiRequest("users");
+    // The component expects an `id` field which is the airtable_id for users
     return users.map(u => ({ id: u.airtable_id, fields: { "User Name": u.user_name } }));
 }
 
@@ -123,7 +116,7 @@ export async function fetchAllUsers() {
 export async function createRecord(table, fields) {
   const endpoint = table.toLowerCase();
   const result = await apiRequest(endpoint, { method: 'POST', body: fields });
-  return { id: result.airtable_id, fields: result };
+  return { id: result.id, fields: result }; // Returns numerical ID for new records
 }
 
 export async function updateRecord(table, id, fields) {
@@ -163,21 +156,20 @@ export async function fetchUpdatesByProjectId(projectId) {
     return updates.map(formatUpdate);
 }
 
-// === SINGULAR FETCHES (FIX) ===
-// Added the missing singular fetch functions
+// === SINGULAR FETCHES ===
 export const fetchAccountById = async (id) => (await fetchAccountsByIds([id]))[0] || null;
 export const fetchProjectById = async (id) => (await fetchProjectsByIds([id]))[0] || null;
 export const fetchUpdateById = async (id) => (await fetchUpdatesByIds([id]))[0] || null;
 export const fetchTaskById = async (id) => (await fetchTasksByIds([id]))[0] || null;
 
-// === CREATION FUNCTIONS (FIX) ===
-// Added the missing creation functions
+// === CREATION FUNCTIONS ===
 export const createAccount = (fields) => createRecord("Accounts", fields);
 export const createProject = (fields) => createRecord("Projects", fields);
 export const createTask = (fields) => createRecord("Tasks", fields);
 export const createUpdate = (fields) => createRecord("Updates", fields);
 
 // === UPDATE FUNCTIONS ===
+// Note: updateUser still uses the airtable_id, which is correct in this hybrid model.
 export const updateUser = (userId, fields) => updateRecord("Users", userId, fields);
 export const updateTask = (taskId, fields) => updateRecord("Tasks", taskId, fields);
 
@@ -204,7 +196,6 @@ export function processUpdatesByProject(allUpdates, projectIds = []) {
   allUpdates.forEach(update => {
     const updateProjectIds = update.fields.Project || [];
     updateProjectIds.forEach(projectId => {
-      // Find the project ID in the target list
       const matchingId = projectIds.find(p => p === projectId);
       if (matchingId && updatesByProjectId[matchingId]) {
         updatesByProjectId[matchingId].push(update);

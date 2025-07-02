@@ -15,10 +15,10 @@ export default function ProjectCard({
   onCreateUpdate,
   onExpandNote,
   userName,
-  isSuccess, // This was the missing prop
+  isSuccess,
 }) {
-  const projectId = record.id;
-  const account = record.fields.Account?.[0];
+  const projectId = record.id; // This is now the numerical ID
+  const account = record.fields.Account?.[0]; // This is now the numerical ID
   const accountName = record.fields["Account Name (from Account)"]?.[0] || "N/A";
 
   return (
@@ -26,7 +26,7 @@ export default function ProjectCard({
       <div className="flex flex-col sm:flex-row gap-4 items-start">
         <div className="w-full sm:w-1/4 min-w-[180px] max-w-[240px]">
           <Link
-            to={`/projects/${projectId}`}
+            to={`/projects/${projectId}`} // Links to /projects/123
             className="font-semibold hover:text-blue-600"
           >
             {record.fields["Project Name"] || "Unnamed Project"}
@@ -42,7 +42,7 @@ export default function ProjectCard({
               Account:{" "}
               {account ? (
                 <Link
-                  to={`/accounts/${account}`}
+                  to={`/accounts/${account}`} // Links to /accounts/456
                   className="text-blue-600 hover:underline"
                 >
                   {accountName}
