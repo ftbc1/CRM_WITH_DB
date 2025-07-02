@@ -224,7 +224,7 @@ export default function ProjectDetail() {
               className={`rounded-lg px-6 py-2 text-white text-sm font-semibold shadow-sm transition ${
                 isUpdating
                   ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-gray-500 hover:bg-blue-700"
+                  : "bg-gray-500 hover:bg-gray-700"
               }`}
             >
               {isUpdating ? "Saving..." : "Save Changes"}

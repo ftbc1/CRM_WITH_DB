@@ -192,7 +192,7 @@ export default function ProjectCreation() {
               className={`rounded-lg px-8 py-3 text-white text-lg font-semibold shadow-sm transition ${
                 loading
                   ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-gray-600 hover:bg-gray-700"
+                  : "bg-gray-500 hover:bg-gray-700"
               }`}
             >
               {loading ? "Creating..." : "Create Project"}
