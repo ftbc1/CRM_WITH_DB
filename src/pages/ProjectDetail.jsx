@@ -53,10 +53,8 @@ export default function ProjectDetail() {
   const { mutate: updateProject, isLoading: isUpdating, isSuccess, error: updateError } = useMutation({
     mutationFn: (updatedFields) => updateRecord("Projects", id, updatedFields),
     onSuccess: () => {
-      // Invalidate and refetch the project query to get fresh data
       queryClient.invalidateQueries(["project", id]);
-       // Show success message for 3 seconds
-       setTimeout(() => {
+      setTimeout(() => {
         queryClient.setQueryData(["project", id], (oldData) => ({...oldData, isSuccess: false}))
       }, 3000);
     },
@@ -106,9 +104,11 @@ export default function ProjectDetail() {
 
   const name = project.fields["Project Name"] || "Unnamed Project";
   const accountName = project.fields["Account Name (from Account)"]?.[0] || "N/A";
-  // Use the Account's Airtable ID for the link, assuming it's a lookup field.
-  const accountAirtableId = project.fields["Account Airtable ID"]?.[0];
-
+  
+  // Based on your database schema, the column is `airtable_id`.
+  // A common lookup field name pattern for this is "airtable_id (from Account)".
+  // Please verify this is the correct field name from your API's response.
+  const accountAirtableId = project.fields["airtable_id (from Account)"]?.[0];
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
