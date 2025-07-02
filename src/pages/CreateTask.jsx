@@ -1,16 +1,64 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTask, fetchAllUsers, fetchProjectsByIds, updateUser } from "../api";
+import { createTask, fetchAllUsers, fetchProjectsByIds } from "../api";
 import { useNavigate } from "react-router-dom";
 import { Listbox, Transition } from "@headlessui/react";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { User, Briefcase, Calendar } from "lucide-react";
+import { CheckIcon, ChevronUpDownIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { User, Briefcase, Calendar, Workflow, AlertTriangle, CheckCircle } from "lucide-react";
 
 const TASK_STATUS_OPTIONS = ["To Do", "In Progress", "Done", "Blocked"];
+const DESCRIPTION_MAX_LENGTH = 500;
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
+
+// A reusable Toast Notification component
+const Notification = ({ show, onHide, message, type }) => {
+  if (!show) return null;
+
+  const baseClasses = "fixed top-5 right-5 w-full max-w-sm p-4 rounded-xl shadow-lg text-white transform transition-all duration-300 ease-in-out";
+  const typeClasses = {
+    success: "bg-green-500",
+    error: "bg-red-500",
+  };
+  const Icon = type === 'success' ? CheckCircle : AlertTriangle;
+
+  return (
+    <div className={`${baseClasses} ${typeClasses[type]} ${show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}>
+      <div className="flex items-start">
+        <div className="flex-shrink-0">
+          <Icon className="h-6 w-6 text-white" aria-hidden="true" />
+        </div>
+        <div className="ml-3 w-0 flex-1 pt-0.5">
+          <p className="text-sm font-medium">{message}</p>
+        </div>
+        <div className="ml-4 flex-shrink-0 flex">
+          <button onClick={onHide} className="inline-flex rounded-md text-white hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <span className="sr-only">Close</span>
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// A reusable Skeleton Loader component
+const SkeletonLoader = () => (
+    <div className="w-full p-4 border border-gray-200 rounded-md shadow">
+        <div className="animate-pulse flex space-x-4">
+            <div className="flex-1 space-y-3 py-1">
+                <div className="h-2 bg-slate-200 rounded"></div>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="h-2 bg-slate-200 rounded col-span-2"></div>
+                    <div className="h-2 bg-slate-200 rounded col-span-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 
 export default function CreateTask() {
   const queryClient = useQueryClient();
@@ -23,7 +71,17 @@ export default function CreateTask() {
     "Status": "To Do",
     "Description": "",
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
+
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification(prev => ({ ...prev, show: false }));
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification.show]);
 
   const createdByUserId = localStorage.getItem("userRecordId") || "";
   
@@ -60,184 +118,249 @@ export default function CreateTask() {
 
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['adminCreatedTasks'] });
-      navigate('/admin-tasks');
+      
+      setNotification({ show: true, message: "Task created successfully!", type: 'success' });
+      setTimeout(() => navigate('/admin-tasks'), 2000);
     },
     onError: (err) => {
-      setError(err.message || "Failed to create task. Please try again.");
+      setNotification({ show: true, message: err.message || "Failed to create task.", type: 'error' });
     }
   });
 
-  function handleSubmit(e) {
+  const validateField = (name, value) => {
+    if (!value) {
+      return `${name} is required.`;
+    }
+    return '';
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError("");
-    if (!fields["Task Name"] || !fields["Project"] || !fields["Assigned To"] || !fields["Due Date"]) {
-      setError("Please fill out all required fields.");
+    setErrors({});
+    
+    const requiredFields = ["Task Name", "Project", "Assigned To", "Due Date"];
+    let hasErrors = false;
+    const newErrors = {};
+
+    requiredFields.forEach(field => {
+      if (!fields[field]) {
+        newErrors[field] = `${field} is required.`;
+        hasErrors = true;
+      }
+    });
+    
+    if (hasErrors) {
+      setErrors(newErrors);
+      setNotification({ show: true, message: 'Please fill out all required fields.', type: 'error' });
       return;
     }
+    
     createTaskMutation.mutate(fields);
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create a New Task
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Assign and track work for your team members.
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-white p-8 rounded-2xl shadow-lg">
-          
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
-              <strong className="font-bold">Error: </strong>
-              <span className="block sm:inline">{error}</span>
-            </div>
-          )}
-
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div className="relative border border-gray-300 rounded-t-md px-3 py-2 focus-within:z-10 focus-within:ring-1 focus-within:ring-blue-600 focus-within:border-blue-600">
-              <label htmlFor="task-name" className="block text-xs font-medium text-gray-700">Task Name</label>
-              <input
-                id="task-name"
-                required
-                type="text"
-                placeholder="e.g., Draft Q3 marketing report"
-                className="block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
-                value={fields["Task Name"]}
-                onChange={e => setFields(f => ({ ...f, "Task Name": e.target.value }))}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Listbox value={fields["Assigned To"]} onChange={value => setFields(f => ({ ...f, "Assigned To": value }))}>
-              {({ open }) => (
-                <div>
-                  <Listbox.Label className="block text-sm font-medium text-gray-700">Assign To</Listbox.Label>
-                  <div className="mt-1 relative">
-                    <Listbox.Button className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                      <span className="flex items-center">
-                        <User className="h-5 w-5 text-gray-400" />
-                        <span className="ml-3 block truncate">{fields["Assigned To"] ? fields["Assigned To"].fields["User Name"] : "Select a user"}</span>
-                      </span>
-                      <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                        <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                      </span>
-                    </Listbox.Button>
-                    <Transition show={open} as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                      <Listbox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                        {users.map(user => (
-                          <Listbox.Option key={user.id} className={({ active }) => classNames(active ? 'text-white bg-blue-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={user}>
-                            {({ selected, active }) => (
-                              <>
-                                <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{user.fields["User Name"]}</span>
-                                {selected ? (<span className={classNames(active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
-                              </>
-                            )}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </Transition>
-                  </div>
-                </div>
-              )}
-            </Listbox>
-
-            <Listbox value={fields["Project"]} onChange={value => setFields(f => ({ ...f, "Project": value }))}>
-              {({ open }) => (
-                <div>
-                  <Listbox.Label className="block text-sm font-medium text-gray-700">Project</Listbox.Label>
-                  <div className="mt-1 relative">
-                    <Listbox.Button className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                      <span className="flex items-center">
-                        <Briefcase className="h-5 w-5 text-gray-400" />
-                        <span className="ml-3 block truncate">{fields["Project"] ? fields["Project"].fields["Project Name"] : "Select a project"}</span>
-                      </span>
-                      <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                        <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                      </span>
-                    </Listbox.Button>
-                    <Transition show={open} as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                      <Listbox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                        {projects.map(project => (
-                          <Listbox.Option key={project.id} className={({ active }) => classNames(active ? 'text-white bg-blue-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={project}>
-                            {({ selected, active }) => (
-                              <>
-                                <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{project.fields["Project Name"]}</span>
-                                {selected ? (<span className={classNames(active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
-                              </>
-                            )}
-                          </Listbox.Option>
-                        ))}
-                      </Listbox.Options>
-                    </Transition>
-                  </div>
-                </div>
-              )}
-            </Listbox>
+    <>
+      <Notification 
+        show={notification.show}
+        onHide={() => setNotification(prev => ({...prev, show: false}))}
+        message={notification.message}
+        type={notification.type}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl w-full space-y-8">
+          <div className="text-center">
+             <h2 className="text-4xl font-extrabold text-gray-900">
+                Create a New Task
+              </h2>
+            <p className="mt-2 text-lg text-gray-600">
+              Delegate responsibilities and keep your projects on track.
+            </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="due-date" className="block text-sm font-medium text-gray-700">Due Date</label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Calendar className="h-5 w-5 text-gray-400" />
-                </div>
+          <div className="bg-white p-10 rounded-2xl shadow-2xl border border-gray-200">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div>
+                <label htmlFor="task-name" className="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
                 <input
-                  id="due-date"
+                  id="task-name"
+                  name="Task Name"
                   required
-                  type="date"
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                  value={fields["Due Date"]}
-                  onChange={e => setFields(f => ({ ...f, "Due Date": e.target.value }))}
+                  type="text"
+                  placeholder="e.g., Draft Q3 marketing report"
+                  className={`appearance-none relative block w-full px-3 py-2 border ${errors['Task Name'] ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                  value={fields["Task Name"]}
+                  onChange={e => setFields(f => ({ ...f, "Task Name": e.target.value }))}
+                  onBlur={handleBlur}
                 />
+                {errors['Task Name'] && <p className="mt-2 text-sm text-red-600">{errors['Task Name']}</p>}
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
-              <select
-                id="status"
-                value={fields["Status"]}
-                onChange={e => setFields(f => ({ ...f, "Status": e.target.value }))}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-              >
-                {TASK_STATUS_OPTIONS.map(status => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {usersLoading ? <SkeletonLoader /> : (
+                  <Listbox value={fields["Assigned To"]} onChange={value => setFields(f => ({ ...f, "Assigned To": value }))}>
+                    <div>
+                      <Listbox.Label className="block text-sm font-medium text-gray-700">Assign To</Listbox.Label>
+                      <div className="mt-1 relative">
+                        <Listbox.Button className={`relative w-full bg-white border ${errors['Assigned To'] ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}>
+                          <span className="flex items-center">
+                            <User className="h-5 w-5 text-gray-400" />
+                            <span className="ml-3 block truncate">{fields["Assigned To"] ? fields["Assigned To"].fields["User Name"] : "Select a user"}</span>
+                          </span>
+                          <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          </span>
+                        </Listbox.Button>
+                        <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                          <Listbox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                            {users.map(user => (
+                              <Listbox.Option key={user.id} className={({ active }) => classNames(active ? 'text-white bg-gray-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={user}>
+                                {({ selected, active }) => (
+                                  <>
+                                    <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{user.fields["User Name"]}</span>
+                                    {selected ? (<span className={classNames(active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
+                                  </>
+                                )}
+                              </Listbox.Option>
+                            ))}
+                          </Listbox.Options>
+                        </Transition>
+                        {errors['Assigned To'] && <p className="mt-2 text-sm text-red-600">{errors['Assigned To']}</p>}
+                      </div>
+                    </div>
+                  </Listbox>
+                )}
+                
+                {projectsLoading ? <SkeletonLoader /> : (
+                  <Listbox value={fields["Project"]} onChange={value => setFields(f => ({ ...f, "Project": value }))}>
+                    <div>
+                      <Listbox.Label className="block text-sm font-medium text-gray-700">Project</Listbox.Label>
+                      <div className="mt-1 relative">
+                        <Listbox.Button className={`relative w-full bg-white border ${errors['Project'] ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}>
+                          <span className="flex items-center">
+                            <Briefcase className="h-5 w-5 text-gray-400" />
+                            <span className="ml-3 block truncate">{fields["Project"] ? fields["Project"].fields["Project Name"] : "Select a project"}</span>
+                          </span>
+                          <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          </span>
+                        </Listbox.Button>
+                        <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                          <Listbox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                            {projects.map(project => (
+                              <Listbox.Option key={project.id} className={({ active }) => classNames(active ? 'text-white bg-gray-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={project}>
+                                {({ selected, active }) => (
+                                  <>
+                                    <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{project.fields["Project Name"]}</span>
+                                    {selected ? (<span className={classNames(active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
+                                  </>
+                                )}
+                              </Listbox.Option>
+                            ))}
+                          </Listbox.Options>
+                        </Transition>
+                        {errors['Project'] && <p className="mt-2 text-sm text-red-600">{errors['Project']}</p>}
+                      </div>
+                    </div>
+                  </Listbox>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <label htmlFor="due-date" className="block text-sm font-medium text-gray-700">Due Date</label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Calendar className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="due-date"
+                      name="Due Date"
+                      required
+                      type="date"
+                      className={`focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm ${errors['Due Date'] ? 'border-red-500' : 'border-gray-300'} rounded-md`}
+                      value={fields["Due Date"]}
+                      onChange={e => setFields(f => ({ ...f, "Due Date": e.target.value }))}
+                      onBlur={handleBlur}
+                    />
+                  </div>
+                  {errors['Due Date'] && <p className="mt-2 text-sm text-red-600">{errors['Due Date']}</p>}
+                </div>
 
-          <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-            <div className="mt-1">
-              <textarea
-                id="description"
-                rows="4"
-                placeholder="Add a detailed description for the task..."
-                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
-                value={fields["Description"]}
-                onChange={e => setFields(f => ({ ...f, "Description": e.target.value }))}
-              />
-            </div>
+                <Listbox value={fields["Status"]} onChange={value => setFields(f => ({ ...f, "Status": value }))}>
+                  <div>
+                    <Listbox.Label className="block text-sm font-medium text-gray-700">Status</Listbox.Label>
+                    <div className="mt-1 relative">
+                      <Listbox.Button className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <span className="flex items-center">
+                          <Workflow className="h-5 w-5 text-gray-400" />
+                          <span className="ml-3 block truncate">{fields["Status"]}</span>
+                        </span>
+                        <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                          <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                        </span>
+                      </Listbox.Button>
+                      <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                        <Listbox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                          {TASK_STATUS_OPTIONS.map(status => (
+                            <Listbox.Option key={status} className={({ active }) => classNames(active ? 'text-white bg-gray-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={status}>
+                              {({ selected, active }) => (
+                                <>
+                                  <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{status}</span>
+                                  {selected ? (<span className={classNames(active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
+                                </>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </Transition>
+                    </div>
+                  </div>
+                </Listbox>
+              </div>
+
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+                <div className="mt-1">
+                  <textarea
+                    id="description"
+                    rows="4"
+                    maxLength={DESCRIPTION_MAX_LENGTH}
+                    placeholder="Add a detailed description for the task..."
+                    className="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                    value={fields["Description"]}
+                    onChange={e => setFields(f => ({ ...f, "Description": e.target.value }))}
+                  />
+                </div>
+                <p className="mt-2 text-sm text-gray-500 text-right">{fields["Description"].length} / {DESCRIPTION_MAX_LENGTH}</p>
+              </div>
+              
+              <div className="flex justify-end pt-4">
+                <button
+                  type="submit"
+                  disabled={createTaskMutation.isLoading || usersLoading || projectsLoading}
+                  className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gray-500 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed transition-all duration-300 ease-in-out"
+                >
+                  {createTaskMutation.isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating Task...
+                    </>
+                  ) : "Create & Assign Task"}
+                </button>
+              </div>
+            </form>
           </div>
-          
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={createTaskMutation.isLoading || usersLoading || projectsLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
-            >
-              {createTaskMutation.isLoading ? "Creating Task..." : "Create & Assign Task"}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
