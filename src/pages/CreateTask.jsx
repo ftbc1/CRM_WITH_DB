@@ -1,24 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, Fragment } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTask, fetchAllUsers, fetchProjectsByIds, updateUser, fetchUserById } from "../api";
+import { createTask, fetchAllUsers, fetchProjectsByIds } from "../api";
 import { useNavigate } from "react-router-dom";
+import { Listbox, Transition } from "@headlessui/react";
+import { CheckIcon, ChevronUpDownIcon, User, Briefcase, Calendar, Type } from "lucide-react";
 
 const TASK_STATUS_OPTIONS = ["To Do", "In Progress", "Done", "Blocked"];
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
 
 export default function CreateTask() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [fields, setFields] = useState({
     "Task Name": "",
-    "Project": "",
-    "Assigned To": "",
+    "Project": null,
+    "Assigned To": null,
     "Due Date": "",
     "Status": "To Do",
     "Description": "",
   });
   const [error, setError] = useState("");
 
-  const adminUserId = localStorage.getItem("userRecordId") || "";
+  const createdByUserId = localStorage.getItem("userRecordId") || "";
   
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ["allUsers"],
@@ -32,28 +38,24 @@ export default function CreateTask() {
     enabled: projectIds.length > 0,
   });
 
-  // --- REFACTORED LOGIC USING useMutation ---
   const createTaskMutation = useMutation({
-    // The new mutation is much simpler. It passes all the necessary data to the backend at once.
-   mutationFn: (taskData) => createTask({
-       ...taskData,
-       "Created By": adminUserId, // Add the creator's ID
-     }),
-    // --- THIS IS THE CRITICAL FIX ---
+    mutationFn: (taskData) => createTask({
+      ...taskData,
+      "Project": taskData["Project"]?.id, // Send numerical ID
+      "Assigned To": taskData["Assigned To"]?.id, // Send user airtable_id
+      "Created By": createdByUserId,
+    }),
     onSuccess: () => {
-     // Invalidate queries for tasks and projects to refetch fresh data.
-     queryClient.invalidateQueries({ queryKey: ['userTasks'] });
-     queryClient.invalidateQueries({ queryKey: ['projects'] });
-     queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['adminCreatedTasks'] });
       navigate('/tasks');
     },
     onError: (err) => {
       setError(err.message || "Failed to create task. Please try again.");
-      console.error("[CreateTask] Mutation Error:", err);
     }
   });
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault();
     setError("");
     if (!fields["Task Name"] || !fields["Project"] || !fields["Assigned To"] || !fields["Due Date"]) {
@@ -62,116 +64,170 @@ export default function CreateTask() {
     }
     createTaskMutation.mutate(fields);
   }
-  
-  const handleFieldChange = (field, value) => {
-    setFields(f => ({ ...f, [field]: value }));
-  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <form onSubmit={handleSubmit} className="bg-white-500 p-8 rounded-lg shadow-md border border-gray-200 space-y-6">
-          <h1 className="text-3xl font-semibold text-gray-800">Create and Assign Task</h1>
-        {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
-                <p className="font-bold">Error</p>
-                <p>{error}</p>
-            </div>
-        )}
-
-        {/* ... form fields remain the same ... */}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl w-full space-y-8">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
-          <input
-            required
-            type="text"
-            placeholder="e.g., Draft initial project proposal"
-            className="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
-            value={fields["Task Name"]}
-            onChange={e => handleFieldChange("Task Name", e.target.value)}
-          />
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create a New Task
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Assign and track work for your team members.
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
-                <select
-                    required
-                    value={fields["Assigned To"]}
-                    onChange={e => handleFieldChange("Assigned To", e.target.value)}
-                    className="w-full border-gray-300 rounded-md shadow-sm"
-                    disabled={usersLoading}
-                >
-                    <option value="" disabled>Select a user...</option>
-                    {users.map(user => (
-                        <option key={user.id} value={user.id}>{user.fields["User Name"]}</option>
-                    ))}
-                </select>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-white p-8 rounded-2xl shadow-lg">
+          
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+              <strong className="font-bold">Error: </strong>
+              <span className="block sm:inline">{error}</span>
             </div>
+          )}
 
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
-                <select
-                    required
-                    value={fields["Project"]}
-                    onChange={e => handleFieldChange("Project", e.target.value)}
-                    className="w-full border-gray-300 rounded-md shadow-sm"
-                    disabled={projectsLoading}
-                >
-                    <option value="" disabled>Select a project...</option>
-                    {projects.map(project => (
-                        <option key={project.id} value={project.id}>{project.fields["Project Name"]}</option>
-                    ))}
-                </select>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div className="relative border border-gray-300 rounded-t-md px-3 py-2 focus-within:z-10 focus-within:ring-1 focus-within:ring-blue-600 focus-within:border-blue-600">
+              <label htmlFor="task-name" className="block text-xs font-medium text-gray-700">Task Name</label>
+              <input
+                id="task-name"
+                required
+                type="text"
+                placeholder="e.g., Draft Q3 marketing report"
+                className="block w-full border-0 p-0 text-gray-900 placeholder-gray-500 focus:ring-0 sm:text-sm"
+                value={fields["Task Name"]}
+                onChange={e => setFields(f => ({ ...f, "Task Name": e.target.value }))}
+              />
             </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Assign To Dropdown */}
+            <Listbox value={fields["Assigned To"]} onChange={value => setFields(f => ({ ...f, "Assigned To": value }))}>
+              {({ open }) => (
+                <div>
+                  <Listbox.Label className="block text-sm font-medium text-gray-700">Assign To</Listbox.Label>
+                  <div className="mt-1 relative">
+                    <Listbox.Button className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                      <span className="flex items-center">
+                        <User className="h-5 w-5 text-gray-400" />
+                        <span className="ml-3 block truncate">{fields["Assigned To"] ? fields["Assigned To"].fields["User Name"] : "Select a user"}</span>
+                      </span>
+                      <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                      </span>
+                    </Listbox.Button>
+                    <Transition show={open} as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                      <Listbox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                        {users.map(user => (
+                          <Listbox.Option key={user.id} className={({ active }) => classNames(active ? 'text-white bg-blue-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={user}>
+                            {({ selected, active }) => (
+                              <>
+                                <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{user.fields["User Name"]}</span>
+                                {selected ? (<span className={classNames(active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
+                              </>
+                            )}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </Transition>
+                  </div>
+                </div>
+              )}
+            </Listbox>
+
+            {/* Project Dropdown */}
+            <Listbox value={fields["Project"]} onChange={value => setFields(f => ({ ...f, "Project": value }))}>
+              {({ open }) => (
+                <div>
+                  <Listbox.Label className="block text-sm font-medium text-gray-700">Project</Listbox.Label>
+                  <div className="mt-1 relative">
+                    <Listbox.Button className="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                      <span className="flex items-center">
+                        <Briefcase className="h-5 w-5 text-gray-400" />
+                        <span className="ml-3 block truncate">{fields["Project"] ? fields["Project"].fields["Project Name"] : "Select a project"}</span>
+                      </span>
+                      <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                      </span>
+                    </Listbox.Button>
+                    <Transition show={open} as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
+                      <Listbox.Options className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                        {projects.map(project => (
+                          <Listbox.Option key={project.id} className={({ active }) => classNames(active ? 'text-white bg-blue-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={project}>
+                            {({ selected, active }) => (
+                              <>
+                                <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{project.fields["Project Name"]}</span>
+                                {selected ? (<span className={classNames(active ? 'text-white' : 'text-blue-600', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
+                              </>
+                            )}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </Transition>
+                  </div>
+                </div>
+              )}
+            </Listbox>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <label htmlFor="due-date" className="block text-sm font-medium text-gray-700">Due Date</label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Calendar className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
-                    required
-                    type="date"
-                    className="w-full border-gray-300 rounded-md shadow-sm"
-                    value={fields["Due Date"]}
-                    onChange={e => handleFieldChange("Due Date", e.target.value)}
+                  id="due-date"
+                  required
+                  type="date"
+                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
+                  value={fields["Due Date"]}
+                  onChange={e => setFields(f => ({ ...f, "Due Date": e.target.value }))}
                 />
+              </div>
             </div>
 
             <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                    value={fields["Status"]}
-                    onChange={e => handleFieldChange("Status", e.target.value)}
-                    className="w-full border-gray-300 rounded-md shadow-sm"
-                >
-                    {TASK_STATUS_OPTIONS.map(status => (
-                        <option key={status} value={status}>{status}</option>
-                    ))}
-                </select>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
+              <select
+                id="status"
+                value={fields["Status"]}
+                onChange={e => setFields(f => ({ ...f, "Status": e.target.value }))}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              >
+                {TASK_STATUS_OPTIONS.map(status => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
             </div>
-        </div>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea
-            rows="4"
-            placeholder="Add a detailed description for the task..."
-            className="w-full border-gray-500 rounded-md shadow-sm"
-            value={fields["Description"]}
-            onChange={e => handleFieldChange("Description", e.target.value)}
-          />
-        </div>
-        
-        <div className="flex justify-end">
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
+            <div className="mt-1">
+              <textarea
+                id="description"
+                rows="4"
+                placeholder="Add a detailed description for the task..."
+                className="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                value={fields["Description"]}
+                onChange={e => setFields(f => ({ ...f, "Description": e.target.value }))}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4">
             <button
-                type="submit"
-                disabled={createTaskMutation.isLoading || usersLoading || projectsLoading}
-                className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gray-500 hover:bg-gray-700 disabled:bg-gray-400"
+              type="submit"
+              disabled={createTaskMutation.isLoading || usersLoading || projectsLoading}
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300"
             >
-                {createTaskMutation.isLoading ? "Creating..." : "Create & Assign Task"}
+              {createTaskMutation.isLoading ? "Creating Task..." : "Create & Assign Task"}
             </button>
-        </div>
-      </form>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
