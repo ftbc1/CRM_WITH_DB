@@ -13,7 +13,9 @@ function classNames(...classes) {
 
 const Notification = ({ show, onHide, message, type }) => {
   if (!show) return null;
-  const baseClasses = "fixed top-5 right-5 w-full max-w-sm p-4 rounded-xl shadow-lg text-white transform transition-all duration-300 ease-in-out";
+    
+  // Added z-50 to ensure it appears above the navbar
+  const baseClasses = "fixed top-5 right-5 w-full max-w-sm p-4 rounded-xl shadow-lg text-white transform transition-all duration-300 ease-in-out z-50";
   const typeClasses = { success: "bg-green-500", error: "bg-red-500" };
   const Icon = type === 'success' ? CheckCircle : AlertTriangle;
   return (
