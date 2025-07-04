@@ -264,6 +264,9 @@ app.post("/api/tasks", async (req, res) => {
     }
 });
 
+// =================================================================
+// === MODIFIED ENDPOINT FOR CREATING UPDATES ===
+// =================================================================
 app.post("/api/updates", async (req, res) => {
     const {
         "Notes": notes, "Date": date, "Update Type": update_type,
@@ -271,16 +274,25 @@ app.post("/api/updates", async (req, res) => {
     } = req.body;
 
     try {
-        const ownerRes = await db.query("SELECT id FROM users WHERE airtable_id = $1", [owner_airtable_id]);
+        // --- CHANGE 1: Fetch both the ID and the name for the owner ---
+        const ownerRes = await db.query("SELECT id, user_name FROM users WHERE airtable_id = $1", [owner_airtable_id]);
         const owner_id = ownerRes.rows[0]?.id;
+        const update_owner_name = ownerRes.rows[0]?.user_name;
 
-        if (!project_id || !owner_id) {
-            return res.status(400).json({ error: "Invalid project or owner ID" });
+        // --- CHANGE 2: Fetch the project name using the project_id ---
+        const projectRes = await db.query("SELECT project_name FROM projects WHERE id = $1", [project_id]);
+        const project_name = projectRes.rows[0]?.project_name;
+
+        // --- Validation: Ensure we found all the required data ---
+        if (!project_id || !owner_id || !project_name || !update_owner_name) {
+            return res.status(400).json({ error: "Invalid project or owner ID, or names could not be found." });
         }
         
+        // --- CHANGE 3: Add the new names to the INSERT statement ---
         const { rows } = await db.query(
-            `INSERT INTO updates (notes, date, update_type, project_id, task_id, update_owner_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [notes, date, update_type, project_id, task_id || null, owner_id]
+            `INSERT INTO updates (notes, date, update_type, project_id, task_id, update_owner_id, project_name, update_owner_name) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+            [notes, date, update_type, project_id, task_id || null, owner_id, project_name, update_owner_name]
         );
         res.status(201).json(rows[0]);
     } catch (err) {
