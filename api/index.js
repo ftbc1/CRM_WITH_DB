@@ -268,12 +268,17 @@ app.post("/api/tasks", async (req, res) => {
 // === MODIFIED ENDPOINT FOR CREATING UPDATES ===
 // =================================================================
 app.post("/api/updates", async (req, res) => {
+    // Destructure the arrays from the request body
     const {
         "Notes": notes, "Date": date, "Update Type": update_type,
-        "Project": project_id, "Task": task_id, "Update Owner": owner_airtable_id
+        "Project": project_id_arr, "Task": task_id, "Update Owner": owner_airtable_id_arr
     } = req.body;
 
     try {
+        // --- FIX: Extract the IDs from the arrays ---
+        const project_id = project_id_arr ? project_id_arr[0] : null;
+        const owner_airtable_id = owner_airtable_id_arr ? owner_airtable_id_arr[0] : null;
+
         // --- CHANGE 1: Fetch both the ID and the name for the owner ---
         const ownerRes = await db.query("SELECT id, user_name FROM users WHERE airtable_id = $1", [owner_airtable_id]);
         const owner_id = ownerRes.rows[0]?.id;
@@ -299,7 +304,6 @@ app.post("/api/updates", async (req, res) => {
         sendError(res, 'Failed to create update.', err);
     }
 });
-
 
 app.patch("/api/tasks/:id", async (req, res) => {
     try {
