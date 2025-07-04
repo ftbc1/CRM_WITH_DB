@@ -16,6 +16,10 @@ export default function UpdateDisplay({ update, userName, expanded, onExpand }) 
         <span>
           <strong>By:</strong> {update.fields["Update Owner Name"] || userName}
         </span>
+        {/* FIX: Added the Update Type display */}
+        <span className="font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+          {update.fields["Update Type"]}
+        </span>
         <span>
           <strong>Date:</strong> {new Date(update.fields.Date).toLocaleDateString()}
         </span>
