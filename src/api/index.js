@@ -64,7 +64,7 @@ const formatTask = (task) => ({
 
 /**
  * Formats an update object from the backend to the structure expected by the frontend.
- * This now includes the project_name and update_owner_name for display purposes.
+ * This now includes the account name for display purposes.
  * @param {object} update - The update object from the backend.
  * @returns {object} The formatted update object.
  */
@@ -76,10 +76,11 @@ const formatUpdate = (update) => ({
         "Update Type": update.update_type,
         "Project": update.project_id ? [update.project_id] : [],
         "Task": update.task_id ? [update.task_id] : [],
-        // The new fields are mapped here for display on the frontend
         "Update Owner Name": update.update_owner_name ? [update.update_owner_name] : [],
         "Project Name": update.project_name,
         "Task Name": update.task_name,
+        // The new field is mapped here for display on the frontend
+        "Account Name": update.update_account,
     }
 });
 

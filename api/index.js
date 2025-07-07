@@ -15,7 +15,7 @@ const sendError = (res, message, err) => {
 };
 
 // =================================================================
-// USER ENDPOINTS (Unchanged - Continues to use airtable_id)
+// USER ENDPOINTS (Unchanged)
 // =================================================================
 
 app.get("/api/users/by-secret-key/:key", async (req, res) => {
@@ -61,7 +61,7 @@ app.patch("/api/users/:id", async (req, res) => {
 
 
 // =================================================================
-// FETCH BY IDs ENDPOINTS (Refactored to use numerical IDs)
+// FETCH BY IDs ENDPOINTS (Unchanged)
 // =================================================================
 
 app.get("/api/accounts", async (req, res) => {
@@ -162,6 +162,9 @@ app.get("/api/tasks", async (req, res) => {
     }
 });
 
+// =================================================================
+// === MODIFIED ENDPOINT FOR FETCHING UPDATES ===
+// =================================================================
 app.get("/api/updates", async (req, res) => {
     try {
         const { ids } = req.query;
@@ -172,11 +175,13 @@ app.get("/api/updates", async (req, res) => {
               p.project_name,
               p.id as project_id,
               t.task_name,
-              t.id as task_id
+              t.id as task_id,
+              a.account_name as update_account
             FROM updates u
             LEFT JOIN users owner ON u.update_owner_id = owner.id
             LEFT JOIN projects p ON u.project_id = p.id
             LEFT JOIN tasks t ON u.task_id = t.id
+            LEFT JOIN accounts a ON p.account_id = a.id
         `;
         const queryParams = [];
 
@@ -196,7 +201,7 @@ app.get("/api/updates", async (req, res) => {
 
 
 // =================================================================
-// CREATE/UPDATE ENDPOINTS (Refactored)
+// CREATE/UPDATE ENDPOINTS (Unchanged except for Updates)
 // =================================================================
 
 app.post("/api/accounts", async (req, res) => {
@@ -205,7 +210,6 @@ app.post("/api/accounts", async (req, res) => {
         "Account Description": account_description, "Account Owner": owner_airtable_id_arr
     } = req.body;
     try {
-        // Still look up owner by airtable_id
         const ownerRes = await db.query("SELECT id FROM users WHERE airtable_id = $1", [owner_airtable_id_arr[0]]);
         const owner_id = ownerRes.rows[0]?.id;
         if (!owner_id) return res.status(400).json({ error: "Invalid account owner ID" });
@@ -224,7 +228,7 @@ app.post("/api/projects", async (req, res) => {
         "Account": account_id_arr, "Project Value": value, "Project Description": description, "Project Owner": owner_airtable_id_arr
     } = req.body;
     try {
-        const account_id = account_id_arr[0]; // This is now a numerical ID
+        const account_id = account_id_arr[0];
         const ownerRes = await db.query("SELECT id FROM users WHERE airtable_id = $1", [owner_airtable_id_arr[0]]);
         const owner_id = ownerRes.rows[0]?.id;
         if (!account_id || !owner_id) return res.status(400).json({ error: "Invalid account or owner ID" });
@@ -268,42 +272,45 @@ app.post("/api/tasks", async (req, res) => {
 // === MODIFIED ENDPOINT FOR CREATING UPDATES ===
 // =================================================================
 app.post("/api/updates", async (req, res) => {
-    // Destructure the arrays from the request body
     const {
         "Notes": notes, "Date": date, "Update Type": update_type,
-        "Project": project_id_arr, "Task": task_id, "Update Owner": owner_airtable_id_arr
+        "Project": project_id, "Task": task_id, "Update Owner": owner_airtable_id
     } = req.body;
 
     try {
-        // --- FIX: Extract the IDs from the arrays ---
-        const project_id = project_id_arr ? project_id_arr[0] : null;
-        const owner_airtable_id = owner_airtable_id_arr ? owner_airtable_id_arr[0] : null;
-
-        // --- CHANGE 1: Fetch both the ID and the name for the owner ---
+        // --- Fetch owner info ---
         const ownerRes = await db.query("SELECT id, user_name FROM users WHERE airtable_id = $1", [owner_airtable_id]);
         const owner_id = ownerRes.rows[0]?.id;
         const update_owner_name = ownerRes.rows[0]?.user_name;
 
-        // --- CHANGE 2: Fetch the project name using the project_id ---
-        const projectRes = await db.query("SELECT project_name FROM projects WHERE id = $1", [project_id]);
-        const project_name = projectRes.rows[0]?.project_name;
+        // --- Fetch project and account name in one go ---
+        const projectInfoRes = await db.query(
+            `SELECT p.project_name, a.account_name
+             FROM projects p
+             JOIN accounts a ON p.account_id = a.id
+             WHERE p.id = $1`,
+            [project_id]
+        );
+        const project_name = projectInfoRes.rows[0]?.project_name;
+        const update_account = projectInfoRes.rows[0]?.account_name;
 
         // --- Validation: Ensure we found all the required data ---
-        if (!project_id || !owner_id || !project_name || !update_owner_name) {
-            return res.status(400).json({ error: "Invalid project or owner ID, or names could not be found." });
+        if (!project_id || !owner_id || !project_name || !update_owner_name || !update_account) {
+            return res.status(400).json({ error: "Invalid IDs, or associated names/account could not be found." });
         }
         
-        // --- CHANGE 3: Add the new names to the INSERT statement ---
+        // --- Add the new names to the INSERT statement ---
         const { rows } = await db.query(
-            `INSERT INTO updates (notes, date, update_type, project_id, task_id, update_owner_id, project_name, update_owner_name) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-            [notes, date, update_type, project_id, task_id || null, owner_id, project_name, update_owner_name]
+            `INSERT INTO updates (notes, date, update_type, project_id, task_id, update_owner_id, project_name, update_owner_name, update_account) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+            [notes, date, update_type, project_id, task_id || null, owner_id, project_name, update_owner_name, update_account]
         );
         res.status(201).json(rows[0]);
     } catch (err) {
         sendError(res, 'Failed to create update.', err);
     }
 });
+
 
 app.patch("/api/tasks/:id", async (req, res) => {
     try {
