@@ -32,7 +32,7 @@ export default function Tasks() {
                  {/* FIX: Corrected link to point to the proper route */}
                 <Link 
                     to="/tasks/create" 
-                    className="px-5 py-2 text-white bg-blue-600 rounded-lg font-medium shadow-sm hover:bg-blue-700 focus:outline-none"
+                    className="px-5 py-2 text-white bg-gray-500 rounded-lg font-medium shadow-sm hover:bg-gray-700 focus:outline-none"
                 >
                     + Create New Task
                 </Link>
