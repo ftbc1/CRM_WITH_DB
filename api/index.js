@@ -311,6 +311,42 @@ app.post("/api/updates", async (req, res) => {
     }
 });
 
+// Add this new endpoint to your index.js file
+
+app.patch("/api/projects/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const fields = req.body;
+
+        // Prevent updating if no fields are provided
+        if (Object.keys(fields).length === 0) {
+            return res.status(400).json({ error: "No fields provided to update." });
+        }
+
+        // Dynamically build the SET clause for the SQL query
+        const setClauses = Object.keys(fields).map((key, index) => {
+            // Map frontend field names to database column names
+            const dbColumn = key.replace(/\s+/g, '_').toLowerCase();
+            return `"${dbColumn}" = $${index + 1}`;
+        }).join(", ");
+
+        const values = Object.values(fields);
+
+        const { rows } = await db.query(
+            `UPDATE projects SET ${setClauses} WHERE id = $${values.length + 1} RETURNING *`,
+            [...values, id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "Project not found or no update was made." });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        sendError(res, "Failed to update project.", err);
+    }
+});
+
 
 app.patch("/api/tasks/:id", async (req, res) => {
     try {
