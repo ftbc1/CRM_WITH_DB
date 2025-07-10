@@ -115,8 +115,8 @@ export default function Projects() {
         Notes: notes,
         Date: selectedDate,
         "Update Type": updateType,
-        Project: [projectId],
-        "Update Owner": [updateOwnerId],
+        Project: projectId, // Corrected this line
+        "Update Owner": updateOwnerId, // Corrected this line
       });
 
       if (update && update.id && updateOwnerId) {
