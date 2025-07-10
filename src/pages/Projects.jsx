@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+import React, { useState, useEffect, useMemo, Fragment } from "react";
+=======
 import React, { useState, useEffect, useMemo } from "react";
+>>>>>>> origin
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchProjectsByIds,
@@ -9,10 +13,19 @@ import {
   formatDateForAirtable,
 } from "../api";
 import { Listbox, Transition } from "@headlessui/react";
+<<<<<<< HEAD
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import ProjectCard from "./ProjectCard";
+import UpdateDisplay from "./UpdateDisplay";
+import { motion } from "framer-motion";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+
+=======
 import { Fragment } from 'react';
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import ProjectCard from "./ProjectCard";
 import UpdateDisplay from "./UpdateDisplay";
+>>>>>>> origin
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -20,6 +33,10 @@ function classNames(...classes) {
 
 function getTodayIST() {
   const now = new Date();
+<<<<<<< HEAD
+  // Adjust to IST
+=======
+>>>>>>> origin
   const utc = now.getTime() + now.getTimezoneOffset() * 60000;
   const ist = new Date(utc + 5.5 * 60 * 60000);
   return ist.toISOString().slice(0, 10);
@@ -68,7 +85,11 @@ export default function Projects() {
     error: projectsError,
   } = useQuery({
     queryKey: ["projects", projectIds],
+<<<<<<< HEAD
+    queryFn: () => fetchProjectsByIds(projectIds),
+=======
     queryFn: () => fetchProjectsByIds(projectIds), // Now fetches using numerical IDs
+>>>>>>> origin
     enabled: projectIds.length > 0,
   });
 
@@ -78,7 +99,11 @@ export default function Projects() {
     error: updatesError,
   } = useQuery({
     queryKey: ["allUpdates"],
+<<<<<<< HEAD
+    queryFn: fetchAllUpdates,
+=======
     queryFn: async () => fetchAllUpdates(),
+>>>>>>> origin
   });
 
   const processedUpdates = useMemo(() => {
@@ -108,13 +133,21 @@ export default function Projects() {
 
   const createUpdateMutation = useMutation({
     mutationFn: async ({ projectId, notes, updateType }) => {
+<<<<<<< HEAD
+=======
       // NOTE: The 'Project' field now expects a single numerical ID, not an array.
+>>>>>>> origin
       const update = await createUpdate({
         Notes: notes,
         Date: selectedDate,
         "Update Type": updateType,
+<<<<<<< HEAD
+        Project: [projectId],
+        "Update Owner": [updateOwnerId],
+=======
         Project: projectId,
         "Update Owner": updateOwnerId, // This is still the user's airtable_id
+>>>>>>> origin
       });
 
       if (update && update.id && updateOwnerId) {
@@ -122,7 +155,10 @@ export default function Projects() {
           localStorage.getItem("updateIds") || "[]"
         );
         const updatedUpdates = [...new Set([...prevUpdates, update.id])];
+<<<<<<< HEAD
+=======
         // The updateUser function still correctly uses the user's airtable_id
+>>>>>>> origin
         await updateUser(updateOwnerId, { Updates: updatedUpdates });
         localStorage.setItem("updateIds", JSON.stringify(updatedUpdates));
       }
@@ -130,7 +166,11 @@ export default function Projects() {
       return update;
     },
     onSuccess: (data, variables) => {
+<<<<<<< HEAD
+      queryClient.invalidateQueries({queryKey: ["allUpdates"]});
+=======
       queryClient.invalidateQueries(["allUpdates"]);
+>>>>>>> origin
       setSuccessProjectId(variables.projectId);
       
       setTimeout(() => {
@@ -169,6 +209,211 @@ export default function Projects() {
   const isLoading = projectsLoading || updatesLoading;
   const error = projectsError || updatesError;
 
+<<<<<<< HEAD
+  const last10Days = getLastNDays(10);
+
+  const filteredProjects = useMemo(() => {
+      if(!projects) return [];
+      return projects.filter((project) => {
+        const name = project.fields["Project Name"]?.toLowerCase() || "";
+        const status = project.fields["Project Status"]?.toLowerCase() || "";
+        const search = searchTerm.toLowerCase();
+
+        const matchesSearch = name.includes(search) || status.includes(search);
+        const matchesStatus = statusFilter
+        ? status === statusFilter.toLowerCase()
+        : true;
+
+        return matchesSearch && matchesStatus;
+    });
+  }, [projects, searchTerm, statusFilter])
+
+  return (
+    <div className="min-h-screen bg-card w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-20">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                    <h1 className="text-4xl font-light text-foreground">My Projects</h1>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <label className="text-sm font-light text-muted-foreground">Date:</label>
+                    <input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => handleDateChange(e.target.value)}
+                        className="border border-border bg-secondary text-foreground rounded-md px-3 py-2 text-sm focus:ring-primary focus:border-primary"
+                    />
+                    <div className="flex gap-1 flex-wrap mt-2 sm:mt-0">
+                        {last10Days.map((date) => (
+                        <button
+                            key={date}
+                            onClick={() => handleDateChange(date)}
+                            className={classNames(
+                            "text-xs font-light px-2 py-1 rounded-md border transition-colors duration-200",
+                            selectedDate === date
+                                ? "bg-primary text-background border-primary"
+                                : "bg-secondary text-foreground hover:bg-[#2E2E2E] border-border"
+                            )}
+                            title={date}
+                        >
+                            {new Date(date).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            })}
+                        </button>
+                        ))}
+                    </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                    <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by project name or status..."
+                    className="border border-border bg-secondary rounded-md px-4 py-2 text-sm w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder-muted-foreground"
+                    />
+
+                    <div className="w-full sm:w-1/3">
+                    <Listbox value={statusFilter} onChange={setStatusFilter}>
+                        {({ open }) => (
+                        <div className="relative">
+                            <Listbox.Button className="relative w-full cursor-default rounded-md bg-secondary py-2 pl-3 pr-10 text-left border border-border shadow-sm focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            <span className="block truncate text-foreground">
+                                {statusFilter || "All Statuses"}
+                            </span>
+                            <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                <ChevronUpDownIcon
+                                className="h-5 w-5 text-muted-foreground"
+                                aria-hidden="true"
+                                />
+                            </span>
+                            </Listbox.Button>
+                            <Transition
+                            show={open}
+                            as={Fragment} 
+                            leave="transition ease-in duration-100"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                            >
+                            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-secondary py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                {STATUS_OPTIONS.map((option, idx) => (
+                                <Listbox.Option
+                                    key={idx}
+                                    className={({ active }) =>
+                                    classNames(
+                                        active ? "bg-primary/20 text-white" : "text-foreground",
+                                        "cursor-default select-none relative py-2 pl-10 pr-4"
+                                    )
+                                    }
+                                    value={option}
+                                >
+                                    {({ selected, active }) => (
+                                    <>
+                                        <span
+                                        className={classNames(
+                                            selected ? "font-semibold" : "font-normal",
+                                            "block truncate"
+                                        )}
+                                        >
+                                        {option || "All Statuses"}
+                                        </span>
+                                        {selected && (
+                                        <span
+                                            className={classNames(
+                                            active ? "text-white" : "text-accent",
+                                            "absolute inset-y-0 left-0 flex items-center pl-3"
+                                            )}
+                                        >
+                                            <CheckIcon className="h-5 w-5" />
+                                        </span>
+                                        )}
+                                    </>
+                                    )}
+                                </Listbox.Option>
+                                ))}
+                            </Listbox.Options>
+                            </Transition>
+                        </div>
+                        )}
+                    </Listbox>
+                    </div>
+                </div>
+            </motion.div>
+
+            {isLoading ? (
+                <div className="text-center py-20 text-muted-foreground">Loading projects...</div>
+            ) : error ? (
+                <div className="text-center py-10 text-red-500">
+                    Error: {error.message}
+                </div>
+            ) : !projects?.length ? (
+                <div className="text-center py-20 text-muted-foreground">
+                    <div className="text-xl mb-2">No projects found</div>
+                    <p>Projects linked to your profile will appear here.</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {filteredProjects.length === 0 ? (
+                    <div className="text-center text-muted-foreground py-10">
+                        No projects match your filters.
+                    </div>
+                    ) : (
+                    filteredProjects.map((record) => (
+                        <ProjectCard
+                        key={record.id}
+                        record={record}
+                        isSuccess={successProjectId === record.id}
+                        update={filteredUpdatesByProject[record.id]}
+                        notes={notesByProject[record.id] || ""}
+                        updateType={updateTypeByProject[record.id] || "Call"}
+                        updateTypeOptions={UPDATE_TYPES}
+                        error={errorByProject[record.id]}
+                        onNotesChange={(val) => handleNotesChange(record.id, val)}
+                        onTypeChange={(val) => handleTypeChange(record.id, val)}
+                        onCreateUpdate={() => handleCreateUpdate(record.id)}
+                        onExpandNote={(update) =>
+                            setExpandedNote({ projectId: record.id, update })
+                        }
+                        userName={userName}
+                        updateOwnerId={updateOwnerId}
+                        />
+                    ))
+                    )}
+                </div>
+            )}
+
+
+            {expandedNote && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 transition-all backdrop-blur-sm">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-[#333333] rounded-2xl border border-border shadow-lg max-w-lg w-full p-6 relative"
+                >
+                    <button
+                    className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => setExpandedNote(null)}
+                    aria-label="Close"
+                    >
+                    <XMarkIcon className="h-6 w-6"/>
+                    </button>
+                    <h3 className="text-lg font-light text-foreground mb-4">Update Details</h3>
+                    <UpdateDisplay
+                    update={expandedNote.update}
+                    userName={userName}
+                    expanded
+                    />
+                </motion.div>
+                </div>
+            )}
+        </div>
+=======
   if (isLoading)
     return <div className="text-center py-20 text-gray-400">Loading...</div>;
   if (error)
@@ -358,6 +603,7 @@ export default function Projects() {
           </div>
         </div>
       )}
+>>>>>>> origin
     </div>
   );
 }
