@@ -66,7 +66,7 @@ export default function ProjectDetail() {
 
   const handleUpdate = (e) => {
     e.preventDefault();
-    const numericValue = fields["Project Value"] ? Number(fields["Project Value"]) : undefined;
+    const numericValue = fields["Project Value"] === "" || fields["Project Value"] === null ? undefined : Number(fields["Project Value"]);
     updateProject({
         ...fields,
         "Project Value": numericValue,
