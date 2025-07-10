@@ -76,8 +76,9 @@ export default function UpdateCreation() {
     try {
       const update = await createUpdate({
         ...fields,
-        Project: fields.Project?.id ? [fields.Project.id] : [],
-        "Update Owner": updateOwnerId ? [updateOwnerId] : [],
+        // Corrected this line to send a single ID
+        Project: fields.Project?.id || null, 
+        "Update Owner": updateOwnerId || null,
       });
       
       const prevUpdateIds = JSON.parse(localStorage.getItem("updateIds") || "[]");
