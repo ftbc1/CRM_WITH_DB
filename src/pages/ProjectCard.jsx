@@ -2,10 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import UpdateForm from "./UpdateForm";
 import UpdateDisplay from "./UpdateDisplay";
-<<<<<<< HEAD
 import { motion } from "framer-motion";
-=======
->>>>>>> origin
 
 export default function ProjectCard({
   record,
@@ -21,7 +18,6 @@ export default function ProjectCard({
   userName,
   isSuccess,
 }) {
-<<<<<<< HEAD
   const projectId = record.id;
   const account = record.fields.Account?.[0];
   const accountName = record.fields["Account Name (from Account)"]?.[0] || "N/A";
@@ -61,35 +57,6 @@ export default function ProjectCard({
                 <Link
                   to={`/accounts/${account}`}
                   className="text-accent hover:underline"
-=======
-  const projectId = record.id; // This is now the numerical ID
-  const account = record.fields.Account?.[0]; // This is now the numerical ID
-  const accountName = record.fields["Account Name (from Account)"]?.[0] || "N/A";
-
-  return (
-    <div className="bg-white rounded-lg border p-4">
-      <div className="flex flex-col sm:flex-row gap-4 items-start">
-        <div className="w-full sm:w-1/4 min-w-[180px] max-w-[240px]">
-          <Link
-            to={`/projects/${projectId}`} // Links to /projects/123
-            className="font-semibold hover:text-blue-600"
-          >
-            {record.fields["Project Name"] || "Unnamed Project"}
-          </Link>
-          <div className="mt-2 text-sm space-y-1">
-            <p>
-              Status:{" "}
-              <span className="text-gray-700">
-                {record.fields["Project Status"] || "N/A"}
-              </span>
-            </p>
-            <p>
-              Account:{" "}
-              {account ? (
-                <Link
-                  to={`/accounts/${account}`} // Links to /accounts/456
-                  className="text-blue-600 hover:underline"
->>>>>>> origin
                 >
                   {accountName}
                 </Link>
@@ -100,19 +67,11 @@ export default function ProjectCard({
           </div>
         </div>
 
-<<<<<<< HEAD
         {/* Update Section */}
         <div className="flex-1 w-full">
             {isSuccess ? (
               <div className="flex items-center justify-center h-full bg-green-500/10 text-green-400 rounded-lg p-4 border border-green-500/20">
                 <p className="font-light">✓ Update saved successfully!</p>
-=======
-        <div className="flex-1 flex flex-row items-start gap-3 w-full">
-          <div className="flex-1 min-w-[200px] max-w-full">
-            {isSuccess ? (
-              <div className="flex items-center justify-center h-full bg-green-50 text-green-800 rounded-md p-4 border border-green-200">
-                <p className="font-semibold">✓ Update saved successfully!</p>
->>>>>>> origin
               </div>
             ) : update ? (
               <UpdateDisplay
@@ -131,17 +90,8 @@ export default function ProjectCard({
                 error={error}
               />
             )}
-<<<<<<< HEAD
         </div>
       </div>
     </motion.div>
   );
 }
-=======
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
->>>>>>> origin

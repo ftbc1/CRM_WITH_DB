@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-<<<<<<< HEAD
 @layer base {
   body {
     /*
@@ -30,10 +29,4 @@ body::after {
   opacity: 0.1;
   pointer-events: none;
   z-index: -1;
-=======
-/* Optional global font-family resets:
-   We'll rely on inline or class styles for special fonts. */
-body {
-  font-family: 'Open Sans', sans-serif;
->>>>>>> origin
 }
