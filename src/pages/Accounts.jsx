@@ -7,6 +7,7 @@ import QuickCreateProject from "./QuickCreateProject";
 import { motion } from "framer-motion";
 import { PlusIcon, BuildingOffice2Icon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
 
 export default function Accounts() {
   const accountIds = useMemo(() => JSON.parse(localStorage.getItem("accountIds") || "[]"), []);
@@ -84,13 +85,13 @@ export default function Accounts() {
                     <h1 className="text-4xl font-light text-foreground">My Managed Accounts</h1>
                     <p className="text-muted-foreground mt-1">Manage your customer accounts and create projects</p>
                     </div>
-                    <button 
+                    <Link
+                        to="/create-account"
                         className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-background rounded-lg hover:bg-primary/90 font-semibold shadow-sm transition-colors"
-                        onClick={() => setShowProjectModal(true)}
                     >
                     <PlusIcon className="h-5 w-5" />
-                    Create Project
-                    </button>
+                    Create Account
+                    </Link>
                 </div>
 
                 <SearchAndFilterBar
