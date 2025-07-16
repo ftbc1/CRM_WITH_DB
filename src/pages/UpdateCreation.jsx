@@ -76,7 +76,6 @@ export default function UpdateCreation() {
     try {
       const update = await createUpdate({
         ...fields,
-        // Corrected this line to send a single ID
         Project: fields.Project?.id || null, 
         "Update Owner": updateOwnerId || null,
       });
@@ -119,7 +118,7 @@ export default function UpdateCreation() {
                                 <div>
                                     <Listbox.Label className="block text-sm font-light text-muted-foreground">Project</Listbox.Label>
                                     <div className="mt-1 relative">
-                                        <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                             <span className="flex items-center"><Briefcase className="h-5 w-5 text-muted-foreground" /><span className="ml-3 block truncate text-foreground">{fields.Project ? fields.Project.fields["Project Name"] : "Select a project"}</span></span>
                                             <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"><ChevronUpDownIcon className="h-5 w-5 text-muted-foreground" aria-hidden="true" /></span>
                                         </Listbox.Button>
@@ -136,7 +135,7 @@ export default function UpdateCreation() {
                             <div>
                                 <Listbox.Label className="block text-sm font-light text-muted-foreground">Update Type</Listbox.Label>
                                 <div className="mt-1 relative">
-                                    <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                    <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span className="flex items-center"><MessageSquare className="h-5 w-5 text-muted-foreground" /><span className="ml-3 block truncate text-foreground">{fields["Update Type"]}</span></span>
                                         <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"><ChevronUpDownIcon className="h-5 w-5 text-muted-foreground" aria-hidden="true" /></span>
                                     </Listbox.Button>
@@ -152,21 +151,31 @@ export default function UpdateCreation() {
 
                     <div>
                         <label htmlFor="notes" className="block text-sm font-light text-muted-foreground">Notes</label>
-                        <div className="mt-1"><textarea id="notes" required rows="4" placeholder="Log the details of the update..." className="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-border bg-secondary rounded-md p-2 text-foreground placeholder-muted-foreground" value={fields["Notes"]} onChange={e => setFields(f => ({ ...f, "Notes": e.target.value }))}></textarea></div>
+                        <div className="mt-1"><textarea id="notes" required rows="4" placeholder="Log the details of the update..." className="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-border bg-secondary rounded-md p-3 text-foreground placeholder-muted-foreground" value={fields["Notes"]} onChange={e => setFields(f => ({ ...f, "Notes": e.target.value }))}></textarea></div>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div>
-                            <label htmlFor="date" className="block text-sm font-light text-muted-foreground">Date</label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-muted-foreground" /></div>
-                                <input required id="date" type="date" className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-border bg-secondary text-foreground rounded-md" value={fields["Date"]} onChange={e => setFields(f => ({ ...f, "Date": e.target.value }))}/>
-                            </div>
+                            <label className="block text-sm font-light text-muted-foreground">Date</label>
+                            <label htmlFor="date" className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+                                <Calendar className="h-5 w-5 text-muted-foreground" />
+                                <span className={`ml-3 block truncate ${fields["Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {fields["Date"] ? new Date(fields["Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
+                                </span>
+                                <input
+                                    id="date"
+                                    required
+                                    type="date"
+                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                                    value={fields["Date"]}
+                                    onChange={e => setFields(f => ({ ...f, "Date": e.target.value }))}
+                                />
+                            </label>
                         </div>
                          <div>
                             <label className="block text-sm font-light text-muted-foreground">Update Owner</label>
                             <div className="mt-1">
-                                <span className="inline-block bg-secondary text-foreground text-sm font-medium mr-2 px-3 py-2 rounded-full border border-border">{userName}</span>
+                                <span className="inline-block bg-secondary text-foreground text-sm font-medium mr-2 px-4 py-3 rounded-full border border-border">{userName}</span>
                             </div>
                         </div>
                     </div>

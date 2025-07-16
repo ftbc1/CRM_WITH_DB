@@ -126,7 +126,7 @@ export default function ProjectCreation() {
                 <form onSubmit={handleSubmit} className="space-y-8">
                     <div>
                         <label htmlFor="project-name" className="block text-sm font-light text-muted-foreground mb-1">Project Name</label>
-                        <input id="project-name" required type="text" placeholder="e.g., Q4 Enterprise Solutions" className="appearance-none relative block w-full px-3 py-2 border border-border bg-secondary placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" value={fields["Project Name"]} onChange={e => setFields(f => ({ ...f, "Project Name": e.target.value }))} />
+                        <input id="project-name" required type="text" placeholder="e.g., Q4 Enterprise Solutions" className="appearance-none relative block w-full px-3 py-3 border border-border bg-secondary placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" value={fields["Project Name"]} onChange={e => setFields(f => ({ ...f, "Project Name": e.target.value }))} />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -135,7 +135,7 @@ export default function ProjectCreation() {
                                 <div>
                                     <Listbox.Label className="block text-sm font-light text-muted-foreground">Account</Listbox.Label>
                                     <div className="mt-1 relative">
-                                        <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                             <span className="flex items-center"><Building2 className="h-5 w-5 text-muted-foreground" /><span className="ml-3 block truncate text-foreground">{fields.Account ? fields.Account.fields["Account Name"] : "Select an account"}</span></span>
                                             <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"><ChevronUpDownIcon className="h-5 w-5 text-muted-foreground" aria-hidden="true" /></span>
                                         </Listbox.Button>
@@ -152,7 +152,7 @@ export default function ProjectCreation() {
                             <div>
                                 <Listbox.Label className="block text-sm font-light text-muted-foreground">Project Status</Listbox.Label>
                                 <div className="mt-1 relative">
-                                    <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                    <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span className="flex items-center"><Workflow className="h-5 w-5 text-muted-foreground" /><span className="ml-3 block truncate text-foreground">{fields["Project Status"]}</span></span>
                                         <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none"><ChevronUpDownIcon className="h-5 w-5 text-muted-foreground" aria-hidden="true" /></span>
                                     </Listbox.Button>
@@ -168,18 +168,36 @@ export default function ProjectCreation() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label htmlFor="start-date" className="block text-sm font-light text-muted-foreground">Start Date</label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-muted-foreground" /></div>
-                                <input id="start-date" type="date" className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-border bg-secondary text-foreground rounded-md" value={fields["Start Date"]} onChange={e => setFields(f => ({ ...f, "Start Date": e.target.value }))}/>
-                            </div>
+                            <label className="block text-sm font-light text-muted-foreground">Start Date</label>
+                            <label htmlFor="start-date" className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+                                <Calendar className="h-5 w-5 text-muted-foreground" />
+                                <span className={`ml-3 block truncate ${fields["Start Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {fields["Start Date"] ? new Date(fields["Start Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
+                                </span>
+                                <input
+                                    id="start-date"
+                                    type="date"
+                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                                    value={fields["Start Date"]}
+                                    onChange={e => setFields(f => ({ ...f, "Start Date": e.target.value }))}
+                                />
+                            </label>
                         </div>
                         <div>
-                            <label htmlFor="end-date" className="block text-sm font-light text-muted-foreground">End Date</label>
-                            <div className="mt-1 relative rounded-md shadow-sm">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-muted-foreground" /></div>
-                                <input id="end-date" type="date" className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-border bg-secondary text-foreground rounded-md" value={fields["End Date"]} onChange={e => setFields(f => ({ ...f, "End Date": e.target.value }))}/>
-                            </div>
+                            <label className="block text-sm font-light text-muted-foreground">End Date</label>
+                            <label htmlFor="end-date" className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+                                <Calendar className="h-5 w-5 text-muted-foreground" />
+                                <span className={`ml-3 block truncate ${fields["End Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {fields["End Date"] ? new Date(fields["End Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
+                                </span>
+                                <input
+                                    id="end-date"
+                                    type="date"
+                                    className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                                    value={fields["End Date"]}
+                                    onChange={e => setFields(f => ({ ...f, "End Date": e.target.value }))}
+                                />
+                            </label>
                         </div>
                     </div>
                      <div>
@@ -188,13 +206,13 @@ export default function ProjectCreation() {
                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <DollarSign className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <input id="project-value" type="number" placeholder="e.g., 50000" className="appearance-none relative block w-full px-3 py-2 pl-10 border border-border bg-secondary placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" value={fields["Project Value"]} onChange={e => setFields(f => ({ ...f, "Project Value": e.target.value }))} />
+                            <input id="project-value" type="number" placeholder="e.g., 50000" className="appearance-none relative block w-full px-3 py-3 pl-10 border border-border bg-secondary placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" value={fields["Project Value"]} onChange={e => setFields(f => ({ ...f, "Project Value": e.target.value }))} />
                         </div>
                     </div>
 
                     <div>
                         <label htmlFor="description" className="block text-sm font-light text-muted-foreground">Project Description</label>
-                        <div className="mt-1"><textarea id="description" rows="4" placeholder="Add a detailed description for the project..." className="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-border bg-secondary rounded-md p-2 text-foreground placeholder-muted-foreground" value={fields["Project Description"]} onChange={e => setFields(f => ({ ...f, "Project Description": e.target.value }))}></textarea></div>
+                        <div className="mt-1"><textarea id="description" rows="4" placeholder="Add a detailed description for the project..." className="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-border bg-secondary rounded-md p-3 text-foreground placeholder-muted-foreground" value={fields["Project Description"]} onChange={e => setFields(f => ({ ...f, "Project Description": e.target.value }))}></textarea></div>
                     </div>
 
                     <div className="flex justify-end pt-4">

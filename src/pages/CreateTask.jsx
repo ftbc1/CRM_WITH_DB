@@ -192,7 +192,7 @@ export default function CreateTask() {
                   required
                   type="text"
                   placeholder="e.g., Draft Q3 marketing report"
-                  className={`appearance-none relative block w-full px-3 py-2 border ${errors['Task Name'] ? 'border-red-500' : 'border-border'} bg-secondary placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
+                  className={`appearance-none relative block w-full px-3 py-3 border ${errors['Task Name'] ? 'border-red-500' : 'border-border'} bg-secondary placeholder-muted-foreground text-foreground rounded-md focus:outline-none focus:ring-primary focus:border-primary sm:text-sm`}
                   value={fields["Task Name"]}
                   onChange={e => setFields(f => ({ ...f, "Task Name": e.target.value }))}
                   onBlur={handleBlur}
@@ -206,7 +206,7 @@ export default function CreateTask() {
                     <div>
                       <Listbox.Label className="block text-sm font-light text-muted-foreground">Assign To</Listbox.Label>
                       <div className="mt-1 relative">
-                        <Listbox.Button className={`relative w-full bg-secondary border ${errors['Assigned To'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm`}>
+                        <Listbox.Button className={`relative w-full bg-secondary border ${errors['Assigned To'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm`}>
                           <span className="flex items-center">
                             <User className="h-5 w-5 text-muted-foreground" />
                             <span className="ml-3 block truncate text-foreground">{fields["Assigned To"] ? fields["Assigned To"].fields["User Name"] : "Select a user"}</span>
@@ -240,7 +240,7 @@ export default function CreateTask() {
                     <div>
                       <Listbox.Label className="block text-sm font-light text-muted-foreground">Project</Listbox.Label>
                       <div className="mt-1 relative">
-                        <Listbox.Button className={`relative w-full bg-secondary border ${errors['Project'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm`}>
+                        <Listbox.Button className={`relative w-full bg-secondary border ${errors['Project'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm`}>
                           <span className="flex items-center">
                             <Briefcase className="h-5 w-5 text-muted-foreground" />
                             <span className="ml-3 block truncate text-foreground">{fields["Project"] ? fields["Project"].fields["Project Name"] : "Select a project"}</span>
@@ -272,22 +272,23 @@ export default function CreateTask() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label htmlFor="due-date" className="block text-sm font-light text-muted-foreground">Due Date</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
-                    </div>
+                  <label className="block text-sm font-light text-muted-foreground">Due Date</label>
+                  <label htmlFor="due-date" className={`mt-1 relative flex items-center w-full bg-secondary border ${errors['Due Date'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary`}>
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <span className={`ml-3 block truncate ${fields["Due Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {fields["Due Date"] ? new Date(fields["Due Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
+                    </span>
                     <input
                       id="due-date"
                       name="Due Date"
                       required
                       type="date"
-                      className={`focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm ${errors['Due Date'] ? 'border-red-500' : 'border-border'} bg-secondary text-foreground rounded-md`}
+                      className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
                       value={fields["Due Date"]}
                       onChange={e => setFields(f => ({ ...f, "Due Date": e.target.value }))}
                       onBlur={handleBlur}
                     />
-                  </div>
+                  </label>
                   {errors['Due Date'] && <p className="mt-2 text-sm text-red-500">{errors['Due Date']}</p>}
                 </div>
 
@@ -295,7 +296,7 @@ export default function CreateTask() {
                   <div>
                     <Listbox.Label className="block text-sm font-light text-muted-foreground">Status</Listbox.Label>
                     <div className="mt-1 relative">
-                      <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                      <Listbox.Button className="relative w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                         <span className="flex items-center">
                           <Workflow className="h-5 w-5 text-muted-foreground" />
                           <span className="ml-3 block truncate text-foreground">{fields["Status"]}</span>
@@ -331,7 +332,7 @@ export default function CreateTask() {
                     rows="4"
                     maxLength={DESCRIPTION_MAX_LENGTH}
                     placeholder="Add a detailed description for the task..."
-                    className="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-border bg-secondary rounded-md p-2 text-foreground placeholder-muted-foreground"
+                    className="shadow-sm focus:ring-primary focus:border-primary mt-1 block w-full sm:text-sm border border-border bg-secondary rounded-md p-3 text-foreground placeholder-muted-foreground"
                     value={fields["Description"]}
                     onChange={e => setFields(f => ({ ...f, "Description": e.target.value }))}
                   />
