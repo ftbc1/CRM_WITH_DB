@@ -170,7 +170,7 @@ export default function ProjectCreation() {
                         <div>
                             <label className="block text-sm font-light text-muted-foreground">Start Date</label>
                             <label htmlFor="start-date" className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
-                                <Calendar className="h-5 w-5 text-muted-foreground" />
+                                <Calendar className="h-5 w-5 text-foreground" />
                                 <span className={`ml-3 block truncate ${fields["Start Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
                                     {fields["Start Date"] ? new Date(fields["Start Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
                                 </span>
@@ -186,7 +186,7 @@ export default function ProjectCreation() {
                         <div>
                             <label className="block text-sm font-light text-muted-foreground">End Date</label>
                             <label htmlFor="end-date" className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
-                                <Calendar className="h-5 w-5 text-muted-foreground" />
+                                <Calendar className="h-5 w-5 text-foreground" />
                                 <span className={`ml-3 block truncate ${fields["End Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
                                     {fields["End Date"] ? new Date(fields["End Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
                                 </span>

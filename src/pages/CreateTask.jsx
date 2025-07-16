@@ -274,7 +274,7 @@ export default function CreateTask() {
                 <div>
                   <label className="block text-sm font-light text-muted-foreground">Due Date</label>
                   <label htmlFor="due-date" className={`mt-1 relative flex items-center w-full bg-secondary border ${errors['Due Date'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary`}>
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <Calendar className="h-5 w-5 text-foreground" />
                     <span className={`ml-3 block truncate ${fields["Due Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {fields["Due Date"] ? new Date(fields["Due Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
                     </span>
