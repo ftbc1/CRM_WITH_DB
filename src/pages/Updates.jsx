@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchUpdatesByIds } from '../api';
+import { fetchUpdatesByIds, fetchProjectsByIds } from '../api';
 import UpdateDisplay from './UpdateDisplay';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,9 +8,10 @@ import { PlusIcon } from '@heroicons/react/20/solid';
 
 export default function Updates() {
   const updateIds = JSON.parse(localStorage.getItem("updateIds") || "[]");
+  const projectIds = JSON.parse(localStorage.getItem("projectIds") || "[]");
   const userName = localStorage.getItem("userName") || "Current User";
 
-  const { data: updates, isLoading, error } = useQuery({
+  const { data: updates, isLoading: updatesLoading, error: updatesError } = useQuery({
     queryKey: ["userSpecificUpdates", updateIds],
     queryFn: () => fetchUpdatesByIds(updateIds),
     enabled: updateIds.length > 0,
@@ -18,6 +19,20 @@ export default function Updates() {
       console.error("[UpdatesPage] Error fetching user-specific updates:", err);
     },
   });
+  
+  const { data: projectsData, isLoading: projectsLoading, error: projectsError } = useQuery({
+    queryKey: ["projects", projectIds],
+    queryFn: () => fetchProjectsByIds(projectIds),
+    enabled: projectIds.length > 0,
+  });
+  
+  const projectMap = useMemo(() => {
+    if (!projectsData) return new Map();
+    return new Map(projectsData.map(p => [p.id, p.fields["Project Name"]]));
+  }, [projectsData]);
+
+  const isLoading = updatesLoading || projectsLoading;
+  const error = updatesError || projectsError;
 
   if (isLoading) return <div className="text-center py-20 text-lg text-muted-foreground">Loading your updates...</div>;
   if (error) return <div className="text-red-500 text-center py-10">Error loading your updates: {error.message}</div>;
@@ -51,8 +66,11 @@ export default function Updates() {
                         {updates.filter(Boolean).map((record) => {
                         if (!record.fields) return null;
 
-                        const projectName = record.fields["Project Name"]?.[0] || "N/A";
                         const projectId = record.fields.Project?.[0];
+                        const fullProjectName = projectMap.get(projectId);
+                        const fallbackProjectName = record.fields["Project Name"]?.[0] || "N/A";
+                        const projectName = fullProjectName || fallbackProjectName;
+                        
                         const taskName = record.fields["Task Name"]?.[0] || "";
                         const taskId = record.fields.Task?.[0];
 

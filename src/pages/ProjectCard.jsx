@@ -17,10 +17,16 @@ export default function ProjectCard({
   onExpandNote,
   userName,
   isSuccess,
+  fullAccountName, // Accept the full account name as a prop
 }) {
   const projectId = record.id;
   const account = record.fields.Account?.[0];
-  const accountName = record.fields["Account Name (from Account)"]?.[0] || "N/A";
+  
+  // Get the account name from the record as a fallback
+  const accountNameFromRecord = record.fields["Account Name (from Account)"]?.[0] || "N/A";
+
+  // Use the full name if it's passed, otherwise use the fallback
+  const accountName = fullAccountName || accountNameFromRecord;
 
   // Define status colors based on the project status
   const statusColors = {

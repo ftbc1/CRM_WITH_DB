@@ -7,6 +7,7 @@ import {
   createUpdate,
   updateUser,
   formatDateForAirtable,
+  fetchAccountsByIds, // Import the function to fetch accounts
 } from "../api";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
@@ -64,6 +65,7 @@ export default function Projects() {
   const userName = localStorage.getItem("userName") || "Current User";
   
   const [projectIds] = useState(() => JSON.parse(localStorage.getItem("projectIds") || "[]"));
+  const [accountIds] = useState(() => JSON.parse(localStorage.getItem("accountIds") || "[]"));
 
   const {
     data: projects,
@@ -83,6 +85,19 @@ export default function Projects() {
     queryKey: ["allUpdates"],
     queryFn: fetchAllUpdates,
   });
+
+  // Fetch all accounts to get their full names
+  const { data: accountsData } = useQuery({
+    queryKey: ["accounts", accountIds],
+    queryFn: () => fetchAccountsByIds(accountIds),
+    enabled: accountIds.length > 0,
+  });
+  
+  // Create a lookup map for account names
+  const accountMap = useMemo(() => {
+    if (!accountsData) return new Map();
+    return new Map(accountsData.map(acc => [acc.id, acc.fields["Account Name"]]));
+  }, [accountsData]);
 
   const processedUpdates = useMemo(() => {
     if (allUpdates.length > 0 && projectIds.length > 0) {
@@ -323,26 +338,32 @@ export default function Projects() {
                         No projects match your filters.
                     </div>
                     ) : (
-                    filteredProjects.map((record) => (
-                        <ProjectCard
-                        key={record.id}
-                        record={record}
-                        isSuccess={successProjectId === record.id}
-                        update={filteredUpdatesByProject[record.id]}
-                        notes={notesByProject[record.id] || ""}
-                        updateType={updateTypeByProject[record.id] || "Call"}
-                        updateTypeOptions={UPDATE_TYPES}
-                        error={errorByProject[record.id]}
-                        onNotesChange={(val) => handleNotesChange(record.id, val)}
-                        onTypeChange={(val) => handleTypeChange(record.id, val)}
-                        onCreateUpdate={() => handleCreateUpdate(record.id)}
-                        onExpandNote={(update) =>
-                            setExpandedNote({ projectId: record.id, update })
-                        }
-                        userName={userName}
-                        updateOwnerId={updateOwnerId}
-                        />
-                    ))
+                    filteredProjects.map((record) => {
+                        const accountId = record.fields.Account?.[0];
+                        const fullAccountName = accountMap.get(accountId);
+
+                        return (
+                            <ProjectCard
+                                key={record.id}
+                                record={record}
+                                isSuccess={successProjectId === record.id}
+                                update={filteredUpdatesByProject[record.id]}
+                                notes={notesByProject[record.id] || ""}
+                                updateType={updateTypeByProject[record.id] || "Call"}
+                                updateTypeOptions={UPDATE_TYPES}
+                                error={errorByProject[record.id]}
+                                onNotesChange={(val) => handleNotesChange(record.id, val)}
+                                onTypeChange={(val) => handleTypeChange(record.id, val)}
+                                onCreateUpdate={() => handleCreateUpdate(record.id)}
+                                onExpandNote={(update) =>
+                                    setExpandedNote({ projectId: record.id, update })
+                                }
+                                userName={userName}
+                                updateOwnerId={updateOwnerId}
+                                fullAccountName={fullAccountName} // Pass the full name down
+                            />
+                        );
+                    })
                     )}
                 </div>
             )}
