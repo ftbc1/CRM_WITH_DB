@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createTask, fetchAllUsers, fetchProjectsByIds } from "../api";
 import { useNavigate } from "react-router-dom";
@@ -64,6 +64,7 @@ const SkeletonLoader = () => (
 export default function CreateTask() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const dueDateRef = useRef(null); // Create a ref for the date input
   const [fields, setFields] = useState({
     "Task Name": "",
     "Project": null,
@@ -273,12 +274,16 @@ export default function CreateTask() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <label className="block text-sm font-light text-muted-foreground">Due Date</label>
-                  <label htmlFor="due-date" className={`mt-1 relative flex items-center w-full bg-secondary border ${errors['Due Date'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary`}>
+                  <div
+                    onClick={() => dueDateRef.current?.showPicker?.()}
+                    className={`mt-1 relative flex items-center w-full bg-secondary border ${errors['Due Date'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary`}
+                  >
                     <Calendar className="h-5 w-5 text-foreground" />
                     <span className={`ml-3 block truncate ${fields["Due Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {fields["Due Date"] ? new Date(fields["Due Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
                     </span>
                     <input
+                      ref={dueDateRef}
                       id="due-date"
                       name="Due Date"
                       required
@@ -288,7 +293,7 @@ export default function CreateTask() {
                       onChange={e => setFields(f => ({ ...f, "Due Date": e.target.value }))}
                       onBlur={handleBlur}
                     />
-                  </label>
+                  </div>
                   {errors['Due Date'] && <p className="mt-2 text-sm text-red-500">{errors['Due Date']}</p>}
                 </div>
 

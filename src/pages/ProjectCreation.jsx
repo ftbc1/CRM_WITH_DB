@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from "react";
+import React, { useState, useEffect, Fragment, useRef } from "react";
 import { createProject, fetchAccountsByIds } from "../api/index.js";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon, XMarkIcon } from "@heroicons/react/20/solid";
@@ -42,6 +42,8 @@ const SkeletonLoader = () => (
 );
 
 export default function ProjectCreation() {
+  const startDateRef = useRef(null); // Ref for start date
+  const endDateRef = useRef(null);   // Ref for end date
   const [fields, setFields] = useState({
     "Project Name": "",
     "Project Status": PROJECT_STATUS_OPTIONS[0],
@@ -169,35 +171,43 @@ export default function ProjectCreation() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
                             <label className="block text-sm font-light text-muted-foreground">Start Date</label>
-                            <label htmlFor="start-date" className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+                            <div
+                              onClick={() => startDateRef.current?.showPicker?.()}
+                              className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary"
+                            >
                                 <Calendar className="h-5 w-5 text-foreground" />
                                 <span className={`ml-3 block truncate ${fields["Start Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
                                     {fields["Start Date"] ? new Date(fields["Start Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
                                 </span>
                                 <input
+                                    ref={startDateRef}
                                     id="start-date"
                                     type="date"
                                     className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
                                     value={fields["Start Date"]}
                                     onChange={e => setFields(f => ({ ...f, "Start Date": e.target.value }))}
                                 />
-                            </label>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-light text-muted-foreground">End Date</label>
-                            <label htmlFor="end-date" className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary">
+                            <div
+                              onClick={() => endDateRef.current?.showPicker?.()}
+                              className="mt-1 relative flex items-center w-full bg-secondary border border-border rounded-md shadow-sm pl-3 pr-3 py-3 text-left cursor-pointer focus-within:ring-1 focus-within:ring-primary focus-within:border-primary"
+                            >
                                 <Calendar className="h-5 w-5 text-foreground" />
                                 <span className={`ml-3 block truncate ${fields["End Date"] ? 'text-foreground' : 'text-muted-foreground'}`}>
                                     {fields["End Date"] ? new Date(fields["End Date"] + 'T00:00:00').toLocaleDateString() : "Select a date"}
                                 </span>
                                 <input
+                                    ref={endDateRef}
                                     id="end-date"
                                     type="date"
                                     className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
                                     value={fields["End Date"]}
                                     onChange={e => setFields(f => ({ ...f, "End Date": e.target.value }))}
                                 />
-                            </label>
+                            </div>
                         </div>
                     </div>
                      <div>
