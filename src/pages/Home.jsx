@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { fetchTasksByIds } from '../api';
-import { ShineBorder } from '../components/ui/ShineBorder'; // Import the ShineBorder component
+import { fetchTasksByIds, triggerDataRefresh } from '../api';
+import { ShineBorder } from '../components/ui/ShineBorder';
 
 // Heroicons imports
 import {
@@ -12,8 +12,6 @@ import {
     DocumentTextIcon,
     PlusIcon,
     CheckCircleIcon,
-    ClockIcon,
-    ShoppingCartIcon, // Icon for New Order
 } from '@heroicons/react/24/outline';
 
 // Status colors remain the same
@@ -26,11 +24,21 @@ const STATUS_COLORS = {
 
 
 export default function Home() {
+    // --- FIX: Use the correct key 'taskIdsAssigned' ---
     const userName = localStorage.getItem("userName") || "User";
     const accountIds = JSON.parse(localStorage.getItem("accountIds") || "[]");
     const projectIds = JSON.parse(localStorage.getItem("projectIds") || "[]");
     const updateIds = JSON.parse(localStorage.getItem("updateIds") || "[]");
-    const taskIds = useMemo(() => JSON.parse(localStorage.getItem("taskIds") || "[]"), []);
+    const taskIds = useMemo(() => JSON.parse(localStorage.getItem("taskIdsAssigned") || "[]"), []);
+
+    // --- Data Refresh Logic ---
+    useEffect(() => {
+        triggerDataRefresh();
+        window.addEventListener('focus', triggerDataRefresh);
+        return () => {
+            window.removeEventListener('focus', triggerDataRefresh);
+        };
+    }, []);
 
     const today = useMemo(() => {
         return new Date().toLocaleDateString('en-US', {
@@ -68,7 +76,6 @@ export default function Home() {
         { title: "New Account", link: "/create-account", Icon: PlusIcon },
     ];
 
-    // Card component for DRY code
     const Card = ({ children, className = '' }) => (
         <div className={`bg-[#333333] border border-border rounded-2xl p-6 ${className}`}>
             {children}
@@ -84,9 +91,9 @@ export default function Home() {
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="mb-10 text-center" // Centered the header text
+                    className="mb-10 text-center"
                 >
-                    <h1 className="text-5xl font-light text-foreground"> {/* Increased font size */}
+                    <h1 className="text-5xl font-light text-foreground">
                         Welcome back, {userName}
                     </h1>
                     <p className="mt-2 text-lg text-muted-foreground">
