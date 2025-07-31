@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchAdminProjectDetail } from '../api';
-import { ArrowLeftIcon, BriefcaseIcon, ChatBubbleBottomCenterTextIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { BriefcaseIcon, ChatBubbleBottomCenterTextIcon, ClipboardDocumentListIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 export default function AdminProjectDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [projectData, setProjectData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,15 +28,11 @@ export default function AdminProjectDetail() {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <div className="text-center py-20 text-lg text-muted-foreground">Loading project details...</div>;
   }
 
   if (error) {
-    return <div className="text-center text-red-500 bg-red-100 border border-red-400 p-4 rounded-lg">{error}</div>;
+    return <div className="text-center text-red-500 bg-red-900/20 border border-red-500/30 p-4 rounded-lg">{error}</div>;
   }
 
   if (!projectData) {
@@ -45,44 +42,53 @@ export default function AdminProjectDetail() {
   const { project, tasks, updates } = projectData;
 
   return (
-    <div className="px-4 sm:px-0 space-y-8">
+    <div className="space-y-10">
       {/* Header */}
       <div>
-        <Link to="/admin/projects" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-4">
-            <ArrowLeftIcon className="h-4 w-4" />
-            Back to All Projects
-        </Link>
-        <h1 className="text-3xl font-bold text-foreground">{project.fields['Project Name']}</h1>
-        <p className="mt-1 text-muted-foreground">
-          Account: <span className="font-semibold">{project.fields['Account Name (from Account)']}</span> | Owner: <span className="font-semibold">{project.fields['Project Owner Name']}</span>
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-            {project.fields['Project Description']}
-        </p>
+        <nav className="text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
+            <ol className="list-none p-0 inline-flex items-center">
+            <li className="flex items-center">
+                <Link to="/admin/projects" className="hover:text-accent transition-colors">Projects</Link>
+                <ChevronRightIcon className="h-5 w-5 text-muted-foreground mx-1" />
+            </li>
+            <li>
+                <span className="font-semibold text-foreground">{project.fields['Project Name']}</span>
+            </li>
+            </ol>
+        </nav>
+        <div className="bg-[#333333] p-6 sm:p-8 rounded-2xl border border-border">
+            <h1 className="text-3xl font-light text-foreground">{project.fields['Project Name']}</h1>
+            <p className="mt-1 text-muted-foreground">
+              Account: <span className="font-medium text-foreground">{project.fields['Account Name (from Account)']}</span> | Owner: <span className="font-medium text-foreground">{project.fields['Project Owner Name']}</span>
+            </p>
+            <p className="mt-4 text-sm text-muted-foreground max-w-2xl">
+                {project.fields['Project Description']}
+            </p>
+        </div>
       </div>
 
       {/* Tasks Table */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <ClipboardDocumentListIcon className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-light text-foreground flex items-center gap-2 mb-4">
+            <ClipboardDocumentListIcon className="h-6 w-6 text-accent" />
             Tasks ({tasks.length})
         </h2>
-        <div className="mt-4 flow-root">
-            <div className="overflow-hidden shadow ring-1 ring-border ring-opacity-5 sm:rounded-lg">
+        <div className="bg-[#333333] shadow-md rounded-2xl overflow-hidden border border-border">
+            <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-[#333333]">
+                    <thead className="bg-secondary/50">
                         <tr>
-                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-foreground sm:pl-6">Task Name</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Assigned To</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Status</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Due Date</th>
+                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-light text-muted-foreground sm:pl-6">Task Name</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-light text-muted-foreground">Assigned To</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-light text-muted-foreground">Status</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-light text-muted-foreground">Due Date</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border bg-[#333333]">
                         {tasks.length > 0 ? tasks.map((task) => (
-                            <tr key={task.id}>
-                                <td className="py-4 pl-4 pr-3 text-sm font-medium text-foreground sm:pl-6">{task.fields['Task Name']}</td>
-                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">{task.fields['Assigned To Name']}</td>
+                            <tr key={task.id} className="hover:bg-[#2E2E2E] transition-colors duration-200 cursor-pointer" onClick={() => navigate(`/admin/tasks/${task.id}`)}>
+                                <td className="py-4 pl-4 pr-3 text-sm font-light text-accent hover:underline sm:pl-6">{task.fields['Task Name']}</td>
+                                <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">{task.fields['Assigned To (Name)']}</td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">{task.fields['Status']}</td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">{task.fields['Due Date']}</td>
                             </tr>
@@ -99,25 +105,25 @@ export default function AdminProjectDetail() {
 
       {/* Updates Table */}
       <div>
-        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <ChatBubbleBottomCenterTextIcon className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-light text-foreground flex items-center gap-2 mb-4">
+            <ChatBubbleBottomCenterTextIcon className="h-6 w-6 text-accent" />
             Updates ({updates.length})
         </h2>
-        <div className="mt-4 flow-root">
-            <div className="overflow-hidden shadow ring-1 ring-border ring-opacity-5 sm:rounded-lg">
+        <div className="bg-[#333333] shadow-md rounded-2xl overflow-hidden border border-border">
+            <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-[#333333]">
+                    <thead className="bg-secondary/50">
                         <tr>
-                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-foreground sm:pl-6">Date</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Notes</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-foreground">Owner</th>
+                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-light text-muted-foreground sm:pl-6">Date</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-light text-muted-foreground">Notes</th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-light text-muted-foreground">Owner</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border bg-[#333333]">
                         {updates.length > 0 ? updates.map((update) => (
                             <tr key={update.id}>
                                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-muted-foreground sm:pl-6">{new Date(update.fields['Date']).toLocaleDateString()}</td>
-                                <td className="py-4 px-3 text-sm text-foreground">{update.fields['Notes']}</td>
+                                <td className="py-4 px-3 text-sm text-foreground whitespace-pre-wrap">{update.fields['Notes']}</td>
                                 <td className="whitespace-nowrap px-3 py-4 text-sm text-muted-foreground">{update.fields['Update Owner Name']}</td>
                             </tr>
                         )) : (
