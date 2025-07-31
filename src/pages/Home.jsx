@@ -2,24 +2,21 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { fetchTasksByIds } from '../api'; // Your original API call is preserved
+import { fetchTasksByIds } from '../api';
+import { ShineBorder } from '../components/ui/ShineBorder'; // Import the ShineBorder component
 
-// Correct v2 Heroicons imports
+// Heroicons imports
 import {
     BuildingOffice2Icon,
     BriefcaseIcon,
     DocumentTextIcon,
-    ArrowTopRightOnSquareIcon,
-    ListBulletIcon,
-    CalendarDaysIcon,
-    PlusIcon
+    PlusIcon,
+    CheckCircleIcon,
+    ClockIcon,
+    ShoppingCartIcon, // Icon for New Order
 } from '@heroicons/react/24/outline';
 
-// Import the UI components
-import { Button } from '../components/ui/button';
-import { ShineBorder } from '../components/ui/ShineBorder';
-
-// NEW: Status colors that look good on a dark theme
+// Status colors remain the same
 const STATUS_COLORS = {
     "To Do": "bg-gray-500/20 text-gray-300",
     "In Progress": "bg-blue-500/20 text-blue-300",
@@ -27,13 +24,21 @@ const STATUS_COLORS = {
     "Done": "bg-green-500/20 text-green-300",
 };
 
+
 export default function Home() {
-    // All your original data fetching and state logic is preserved
     const userName = localStorage.getItem("userName") || "User";
     const accountIds = JSON.parse(localStorage.getItem("accountIds") || "[]");
     const projectIds = JSON.parse(localStorage.getItem("projectIds") || "[]");
     const updateIds = JSON.parse(localStorage.getItem("updateIds") || "[]");
     const taskIds = useMemo(() => JSON.parse(localStorage.getItem("taskIds") || "[]"), []);
+
+    const today = useMemo(() => {
+        return new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+        });
+    }, []);
 
     const summaryStats = [
         { title: 'Managed Accounts', count: accountIds.length, link: '/accounts', Icon: BuildingOffice2Icon },
@@ -54,147 +59,153 @@ export default function Home() {
             .sort((a, b) => new Date(a.fields['Due Date']) - new Date(b.fields['Due Date']))
             .slice(0, 5);
     }, [allTasks]);
+    
+    const quickActions = [
+        { title: "New Order", link: "/delivery/create", Icon: PlusIcon },
+        { title: "New Task", link: "/create-task", Icon: PlusIcon },
+        { title: "New Project", link: "/create-project", Icon: PlusIcon },
+        { title: "New Update", link: "/create-update", Icon: PlusIcon },
+        { title: "New Account", link: "/create-account", Icon: PlusIcon },
+    ];
 
-    // This is the new JSX with all the rian.io styling and effects
+    // Card component for DRY code
+    const Card = ({ children, className = '' }) => (
+        <div className={`bg-[#333333] border border-border rounded-2xl p-6 ${className}`}>
+            {children}
+        </div>
+    );
+
+
     return (
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12 space-y-24">
+        <div className="w-full bg-card min-h-screen">
+            <main className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                {/* --- HEADER --- */}
+                <motion.header 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-10 text-center" // Centered the header text
+                >
+                    <h1 className="text-5xl font-light text-foreground"> {/* Increased font size */}
+                        Welcome back, {userName}
+                    </h1>
+                    <p className="mt-2 text-lg text-muted-foreground">
+                        Today is {today}.
+                    </p>
+                </motion.header>
 
-            {/* Section 1: Welcome Header with updated font styles */}
-            <motion.header 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-center"
-            >
-                <h1 className="font-light tracking-tight text-4xl md:text-6xl lg:text-7xl leading-tight text-foreground">
-                    Welcome back, {userName}!
-                </h1>
-                <p className="mt-4 text-lg md:text-xl text-muted-foreground tracking-wide">
-                    Here's a snapshot of your workspace. Let's get things done.
-                </p>
-            </motion.header>
+                {/* --- DASHBOARD GRID --- */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-            {/* Section 2: Summary Stat Cards with LOCALIZED aurora background */}
-            <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                aria-labelledby="summary-heading"
-                className="relative" // Parent container for the aurora
-            >
-                {/* THIS IS THE AURORA DIV - It sits behind the cards 
-                <div 
-                  className="absolute -top-32 left-1/2 -z-10 h-[40rem] w-[60rem] -translate-x-1/2 [background:radial-gradient(50%_50%_at_50%_50%,#7634d2_0%,rgba(255,255,255,0)_100%)] opacity-20"
-                  aria-hidden="true" 
-                />*/}
+                    {/* --- LEFT COLUMN: KEY METRICS --- */}
+                    <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="lg:col-span-3 space-y-8"
+                    >
+                        <section>
+                            <h2 className="text-xl font-light text-foreground mb-5 text-left">Key Metrics</h2>
+                            <div className="space-y-5">
+                                {summaryStats.map(stat => (
+                                    <Link to={stat.link} key={stat.title} className="block group relative">
+                                        <Card className="transition-all duration-300 group-hover:bg-[#3a3a3a]">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center">
+                                                    <stat.Icon className="h-6 w-6 text-muted-foreground" />
+                                                    <h3 className="text-md font-light text-foreground ml-3">{stat.title}</h3>
+                                                </div>
+                                                <p className="text-3xl font-light text-foreground">{stat.count}</p>
+                                            </div>
+                                        </Card>
+                                        <ShineBorder 
+                                            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                            borderWidth={1}
+                                            shineColor={["#67F5C8", "#ADFF15", "#F1FA38"]}
+                                        />
+                                    </Link>
+                                ))}
+                            </div>
+                        </section>
+                    </motion.div>
 
-                <h2 id="summary-heading" className="sr-only">Summary Statistics</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {summaryStats.map((stat) => (
-                        <div key={stat.title} className="relative group">
-                            <div className="relative bg-[#333333] border border-border rounded-2xl p-6 flex flex-col justify-between h-full transition-all duration-300 group-hover:shadow-2xl group-hover:-translate-y-1">
-                                <ShineBorder
-                                    className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                                    shineColor={["#67F5C8", "#ADFF15", "#F1FA38"]}
-                                    borderWidth={2}
-                                />
-                                <div className="relative z-10">
-                                    <stat.Icon className="h-8 w-8 text-muted-foreground mb-4" />
-                                    {/* CHANGED: font-semibold to font-light */}
-                                    <h3 className="text-lg font-light text-foreground">{stat.title}</h3>
-                                    {/* NOTE: Kept font-bold here for emphasis on the number */}
-                                    <p className="text-5xl font-light text-foreground my-2">{stat.count}</p>
-                                </div>
-                                <Link to={stat.link} className="relative z-10 mt-4 text-sm font-medium text-muted-foreground hover:text-white flex items-center">
-                                    View {stat.title}
-                                    <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1.5" />
+                    {/* --- CENTER COLUMN: UPCOMING TASKS --- */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                        className="lg:col-span-6"
+                    >
+                        <section>
+                             <div className="flex items-center justify-between mb-5">
+                                <h2 className="text-xl font-light text-foreground">Upcoming Tasks</h2>
+                                <Link to="/my-tasks" className="text-sm font-light text-muted-foreground hover:text-white">
+                                    View all &rarr;
                                 </Link>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            </motion.section>
+                            <Card className="p-0 overflow-hidden transition-all duration-300">
+                                {tasksLoading ? (
+                                    <p className="p-10 text-center text-muted-foreground">Loading tasks...</p>
+                                ) : upcomingTasks.length > 0 ? (
+                                    <ul className="divide-y divide-border">
+                                        {upcomingTasks.map(task => (
+                                            <li key={task.id} className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 hover:bg-[#3a3a3a] transition-colors">
+                                                <div>
+                                                    <p className="font-light text-foreground">{task.fields["Task Name"]}</p>
+                                                    <p className="text-sm text-muted-foreground">{task.fields["Project Name"]?.[0] || 'N/A'}</p>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                     <div className={`text-xs font-light px-3 py-1 rounded-full ${STATUS_COLORS[task.fields.Status] || 'bg-gray-500/20 text-gray-300'}`}>
+                                                        {task.fields.Status}
+                                                    </div>
+                                                    <p className="text-sm font-light text-muted-foreground">
+                                                        {new Date(task.fields["Due Date"]).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <div className="p-10 text-center">
+                                        <CheckCircleIcon className="h-8 w-8 text-green-500 mx-auto" />
+                                        <p className="mt-2 font-light text-lg text-foreground">You're all caught up!</p>
+                                    </div>
+                                )}
+                            </Card>
+                        </section>
+                    </motion.div>
 
-            {/* Section 3: Upcoming Tasks & Quick Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-                <motion.section 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                    className="lg:col-span-2" 
-                    aria-labelledby="tasks-heading"
-                >
-                    <div className="flex items-center justify-between mb-6">
-                        {/* CHANGED: font-semibold to font-light */}
-                        <h2 id="tasks-heading" className="text-2xl font-light text-foreground flex items-center">
-                            <ListBulletIcon className="h-6 w-6 mr-3 text-muted-foreground" />
-                            Upcoming Tasks
-                        </h2>
-                        <Link to="/my-tasks" className="text-sm font-medium text-muted-foreground hover:text-white">
-                            View All &rarr;
-                        </Link>
-                    </div>
-                    <div className="bg-[#333333] border border-border rounded-2xl overflow-hidden">
-                        {tasksLoading ? (
-                            <p className="text-center text-muted-foreground p-12">Loading tasks...</p>
-                        ) : upcomingTasks.length > 0 ? (
-                            <ul className="divide-y divide-border">
-                                {upcomingTasks.map((task) => (
-                                    <li key={task.id} className="p-5 hover:bg-white/5 transition-colors duration-200 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                                        <div className="flex-1 mb-3 sm:mb-0">
-                                            {/* CHANGED: font-semibold to font-light */}
-                                            <p className="font-light text-foreground">{task.fields["Task Name"]}</p>
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                                Project: <Link to={`/projects/${task.fields.Project[0]}`} className="hover:underline">{task.fields["Project Name"]?.[0] || 'N/A'}</Link>
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-x-4 gap-y-2 flex-wrap">
-                                            <div className={`text-xs font-medium px-3 py-1 rounded-full ${STATUS_COLORS[task.fields.Status] || 'bg-gray-500/20 text-gray-300'}`}>
-                                                {task.fields.Status}
-                                            </div>
-                                            {/* CHANGED: font-semibold to font-light */}
-                                            <div className="flex items-center text-sm text-red-400 font-light">
-                                                <CalendarDaysIcon className="h-4 w-4 mr-1.5" />
-                                                Due: {new Date(task.fields["Due Date"]).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <div className="text-center text-muted-foreground p-12">
-                                {/* CHANGED: font-semibold to font-light */}
-                                <h3 className="font-light text-lg">All caught up!</h3>
-                                <p className="mt-1">You have no upcoming tasks. Great job!</p>
+                     {/* --- RIGHT COLUMN: QUICK ACTIONS --- */}
+                     <motion.div 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.6 }}
+                        className="lg:col-span-3"
+                    >
+                         <section>
+                            <h2 className="text-xl font-light text-foreground mb-5">Quick Actions</h2>
+                            <div className="flex flex-col gap-4">
+                                {quickActions.map(action => {
+                                    const ActionIcon = action.Icon;
+                                    return (
+                                        <Link key={action.title} to={action.link} className="relative group">
+                                            <button className="w-full text-left font-light text-base px-4 py-4 bg-[#333333] group-hover:bg-[#3a3a3a] text-foreground border border-transparent rounded-lg flex items-center transition-colors">
+                                                <ActionIcon className="h-5 w-5 mr-3 text-muted-foreground"/> 
+                                                {action.title}
+                                            </button>
+                                            <ShineBorder 
+                                                className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                                                borderWidth={1}
+                                                shineColor={["#67F5C8", "#ADFF15", "#F1FA38"]}
+                                            />
+                                        </Link>
+                                    )
+                                })}
                             </div>
-                        )}
-                    </div>
-                </motion.section>
-
-                <motion.section 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.6 }}
-                    aria-labelledby="actions-heading"
-                >
-                    {/* CHANGED: font-semibold to font-light */}
-                    <h2 id="actions-heading" className="text-2xl font-light text-foreground mb-6">Quick Actions</h2>
-                    <div className="flex flex-col gap-4">
-                        <Link to="/create-account">
-                            <Button className="w-full justify-start text-base py-6 bg-[#333333] hover:bg-[#2E2E2E] text-foreground border-transparent"><PlusIcon className="h-5 w-5 mr-3"/> New Account</Button>
-                        </Link>
-                        <Link to="/create-project">
-                            <Button className="w-full justify-start text-base py-6 bg-[#333333] hover:bg-[#2E2E2E] text-foreground border-transparent"><PlusIcon className="h-5 w-5 mr-3"/> New Project</Button>
-                        </Link>
-                        <Link to="/create-update">
-                            <Button className="w-full justify-start text-base py-6 bg-[#333333] hover:bg-[#2E2E2E] text-foreground border-transparent"><PlusIcon className="h-5 w-5 mr-3"/> New Update</Button>
-                        </Link>
-                        <Link to="/create-task">
-                            <Button className="w-full justify-start text-base py-6 bg-[#333333] hover:bg-[#2E2E2E] text-foreground border-transparent"><PlusIcon className="h-5 w-5 mr-3"/> New Task</Button>
-                        </Link>
-                    </div>
-                </motion.section>
-            </div>
+                        </section>
+                    </motion.div>
+                </div>
+            </main>
         </div>
     );
 }

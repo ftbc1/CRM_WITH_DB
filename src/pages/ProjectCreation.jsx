@@ -72,7 +72,6 @@ export default function ProjectCreation() {
     try {
       const accountIds = JSON.parse(localStorage.getItem("accountIds") || "[]");
       if (accountIds.length > 0) {
-        // This is a mock API call. Replace with your actual API call.
         const response = await fetch(`/api/accounts?ids=${accountIds.join(',')}`);
         const accountsData = await response.json();
         setAccounts(accountsData);
