@@ -99,18 +99,15 @@ export default function CreateTask() {
 
   const createTaskMutation = useMutation({
     mutationFn: (taskData) => {
-        // Ensure we send the secretKey for the owner
         const createdByUserId = localStorage.getItem("secretKey") || "";
         return createTask({
             ...taskData,
             "Project": taskData["Project"]?.id,
-            "Assigned To": taskData["Assigned To"]?.airtable_id, // Send the airtable_id (secretKey) of the assigned user
+            "Assigned To": taskData["Assigned To"]?.airtable_id, // FIX: Send the airtable_id (secretKey)
             "Created By": createdByUserId,
         });
     },
     onSuccess: () => {
-      // The global refresh in `createRecord` handles invalidation,
-      // but we can still show a success message and navigate.
       setNotification({ show: true, message: "Task created successfully!", type: 'success' });
       setTimeout(() => navigate('/my-tasks'), 2000);
     },

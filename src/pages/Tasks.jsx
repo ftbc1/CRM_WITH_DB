@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchTasksByIds } from '../api';
+import { fetchTasksByIds, triggerDataRefresh } from '../api';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PlusIcon } from '@heroicons/react/20/solid';
@@ -13,7 +13,15 @@ const STATUS_COLORS = {
 };
 
 export default function Tasks() {
-    const assignedTaskIds = JSON.parse(localStorage.getItem("taskIds") || "[]");
+    const assignedTaskIds = JSON.parse(localStorage.getItem("taskIdsAssigned") || "[]");
+
+    useEffect(() => {
+        triggerDataRefresh();
+        window.addEventListener('focus', triggerDataRefresh);
+        return () => {
+            window.removeEventListener('focus', triggerDataRefresh);
+        };
+    }, []);
 
     const { data: tasks = [], isLoading, error } = useQuery({
         queryKey: ['userAssignedTasks', assignedTaskIds],
