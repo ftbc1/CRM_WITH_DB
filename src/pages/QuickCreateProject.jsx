@@ -36,22 +36,24 @@ export default function QuickCreateProject({ accounts, onClose, defaultAccount }
   }, [defaultAccount]);
 
   const [error, setError] = useState("");
-  const projectOwnerId = localStorage.getItem("userRecordId") || "";
-
+  
   const createProjectMutation = useMutation({
-    mutationFn: (projectData) => createProject(projectData),
-    onSuccess: (newProject) => {
-      queryClient.invalidateQueries({queryKey: ["projects"]});
-      queryClient.invalidateQueries({queryKey: ["accountProjects", fields.Account]});
-
-      const prevProjects = JSON.parse(localStorage.getItem("projectIds") || "[]");
-      localStorage.setItem("projectIds", JSON.stringify([...prevProjects, newProject.id]));
-
+    mutationFn: (projectData) => {
+        // --- FIX: Use secretKey for the project owner ---
+        const projectOwnerId = localStorage.getItem("secretKey") || "";
+        return createProject({
+            ...projectData,
+            "Project Owner": projectOwnerId ? [projectOwnerId] : [],
+        });
+    },
+    onSuccess: () => {
+      // The global refresh in `createRecord` will handle updating the data.
+      // We just need to close the modal.
       onClose();
     },
     onError: (err) => {
         setError("Failed to create project: " + (err.message || "Unknown error"));
-      }
+    }
   });
 
   async function handleSubmit(e) {
@@ -72,7 +74,6 @@ export default function QuickCreateProject({ accounts, onClose, defaultAccount }
       "Account": fields["Account"] ? [fields["Account"]] : [],
       "Project Value": fields["Project Value"] ? Number(fields["Project Value"]) : undefined,
       "Project Description": fields["Project Description"],
-      "Project Owner": projectOwnerId ? [projectOwnerId] : [],
     });
   }
 

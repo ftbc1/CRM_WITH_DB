@@ -64,7 +64,7 @@ const SkeletonLoader = () => (
 export default function CreateTask() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const dueDateRef = useRef(null); // Create a ref for the date input
+  const dueDateRef = useRef(null);
   const [fields, setFields] = useState({
     "Task Name": "",
     "Project": null,
@@ -85,8 +85,6 @@ export default function CreateTask() {
     }
   }, [notification.show]);
 
-  const createdByUserId = localStorage.getItem("userRecordId") || "";
-  
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ["allUsers"],
     queryFn: fetchAllUsers,
@@ -100,20 +98,19 @@ export default function CreateTask() {
   });
 
   const createTaskMutation = useMutation({
-    mutationFn: (taskData) => createTask({
-      ...taskData,
-      "Project": taskData["Project"]?.id,
-      "Assigned To": taskData["Assigned To"]?.id,
-      "Created By": createdByUserId,
-    }),
-    onSuccess: (newTask) => {
-      const prevCreatedTaskIds = JSON.parse(localStorage.getItem("createdTaskIds") || "[]");
-      const newCreatedTaskIds = [...new Set([...prevCreatedTaskIds, newTask.id])];
-      localStorage.setItem("createdTaskIds", JSON.stringify(newCreatedTaskIds));
-      
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['adminCreatedTasks'] });
-      
+    mutationFn: (taskData) => {
+        // Ensure we send the secretKey for the owner
+        const createdByUserId = localStorage.getItem("secretKey") || "";
+        return createTask({
+            ...taskData,
+            "Project": taskData["Project"]?.id,
+            "Assigned To": taskData["Assigned To"]?.airtable_id, // Send the airtable_id (secretKey) of the assigned user
+            "Created By": createdByUserId,
+        });
+    },
+    onSuccess: () => {
+      // The global refresh in `createRecord` handles invalidation,
+      // but we can still show a success message and navigate.
       setNotification({ show: true, message: "Task created successfully!", type: 'success' });
       setTimeout(() => navigate('/my-tasks'), 2000);
     },
