@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { fetchTaskById, updateTask } from '../api';
-import { ArrowLeftIcon, CalendarIcon, UserIcon, FolderIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, UserIcon, FolderIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 
 export default function TaskDetail() {
@@ -69,12 +69,12 @@ export default function TaskDetail() {
                 <ol className="list-none p-0 inline-flex items-center flex-wrap">
                 <li className="flex items-center">
                     <Link to="/projects" className="hover:text-accent transition-colors">Projects</Link>
-                    <ChevronRightIcon className="h-5 w-5 text-muted-foreground mx-1" />
+                    <ChevronRightIcon className="h-5 w-5 text-muted-foreground mx-1 flex-shrink-0" />
                 </li>
                 {projectId && (
-                    <li className="flex items-center">
-                        <Link to={`/projects/${projectId}`} className="hover:text-accent transition-colors break-all">{projectName}</Link>
-                        <ChevronRightIcon className="h-5 w-5 text-muted-foreground mx-1" />
+                    <li className="flex items-center min-w-0">
+                        <Link to={`/projects/${projectId}`} className="hover:text-accent transition-colors break-words">{projectName}</Link>
+                        <ChevronRightIcon className="h-5 w-5 text-muted-foreground mx-1 flex-shrink-0" />
                     </li>
                 )}
                 <li className="flex items-center">
