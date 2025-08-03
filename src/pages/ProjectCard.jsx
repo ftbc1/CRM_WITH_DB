@@ -17,18 +17,16 @@ export default function ProjectCard({
   onExpandNote,
   userName,
   isSuccess,
-  fullAccountName, // Accept the full account name as a prop
+  fullAccountName,
+  isClosed,
 }) {
   const projectId = record.id;
   const account = record.fields.Account?.[0];
   
-  // Get the account name from the record as a fallback
   const accountNameFromRecord = record.fields["Account Name (from Account)"]?.[0] || "N/A";
 
-  // Use the full name if it's passed, otherwise use the fallback
   const accountName = fullAccountName || accountNameFromRecord;
 
-  // Define status colors based on the project status
   const statusColors = {
     "Need Analysis": "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
     "Negotiation": "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -45,7 +43,6 @@ export default function ProjectCard({
         className="bg-[#333333] rounded-2xl border border-border p-6"
     >
       <div className="flex flex-col md:flex-row gap-6 items-start">
-        {/* Project Details Section */}
         <div className="w-full md:w-1/3 lg:w-1/4">
           <Link
             to={`/projects/${projectId}`}
@@ -73,9 +70,12 @@ export default function ProjectCard({
           </div>
         </div>
 
-        {/* Update Section */}
         <div className="flex-1 w-full">
-            {isSuccess ? (
+            {isClosed ? (
+              <div className="flex items-center justify-center h-full bg-secondary/50 text-muted-foreground rounded-lg p-4 border border-border">
+                <p className="font-light text-center">This project is closed. Updates can no longer be added.</p>
+              </div>
+            ) : isSuccess ? (
               <div className="flex items-center justify-center h-full bg-green-500/10 text-green-400 rounded-lg p-4 border border-green-500/20">
                 <p className="font-light">✓ Update saved successfully!</p>
               </div>

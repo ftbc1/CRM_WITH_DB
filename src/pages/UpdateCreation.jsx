@@ -16,7 +16,6 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-// A reusable Toast Notification component
 const Notification = ({ show, onHide, message, type }) => {
   if (!show) return null;
 
@@ -73,10 +72,13 @@ export default function UpdateCreation() {
     try {
       const projectIds = JSON.parse(localStorage.getItem("projectIds") || "[]");
       if (projectIds.length > 0) {
-        // This is a mock API call. Replace with your actual API call.
         const response = await fetch(`/api/projects?ids=${projectIds.join(',')}`);
         const projectsData = await response.json();
-        setProjects(projectsData);
+        const openProjects = projectsData.filter(project => 
+            project.fields["Project Status"] !== "Closed Won" && 
+            project.fields["Project Status"] !== "Closed Lost"
+        );
+        setProjects(openProjects);
       }
     } catch (error) {
       console.error("Failed to load projects:", error);
@@ -149,7 +151,6 @@ export default function UpdateCreation() {
 
       showNotification("Update created successfully!", "success");
 
-      // Reset form
       setFields({
         "Notes": "",
         "Date": new Date().toISOString().split('T')[0],
@@ -263,7 +264,6 @@ export default function UpdateCreation() {
                 </Listbox>
             </div>
 
-            {/* New Disabled Update Owner Field */}
             <div>
                 <label htmlFor="update-owner" className="block text-sm font-light text-muted-foreground mb-1">Update Owner</label>
                 <div className="relative">

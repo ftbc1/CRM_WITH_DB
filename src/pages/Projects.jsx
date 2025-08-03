@@ -322,6 +322,7 @@ export default function Projects() {
                     filteredProjects.map((record) => {
                         const accountId = record.fields.Account?.[0];
                         const fullAccountName = accountMap.get(accountId);
+                        const isClosed = record.fields["Project Status"] === "Closed Won" || record.fields["Project Status"] === "Closed Lost";
 
                         return (
                             <ProjectCard
@@ -341,6 +342,7 @@ export default function Projects() {
                                 }
                                 userName={userName}
                                 fullAccountName={fullAccountName}
+                                isClosed={isClosed}
                             />
                         );
                     })
