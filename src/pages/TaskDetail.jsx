@@ -37,7 +37,6 @@ export default function TaskDetail() {
       setTask(updatedTask);
     } catch (err) {
       console.error("Failed to update task status:", err);
-      // Optionally show an error to the user
     }
   };
 
@@ -67,19 +66,19 @@ export default function TaskDetail() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-20">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <nav className="text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
-                <ol className="list-none p-0 inline-flex items-center">
+                <ol className="list-none p-0 inline-flex items-center flex-wrap">
                 <li className="flex items-center">
                     <Link to="/projects" className="hover:text-accent transition-colors">Projects</Link>
                     <ChevronRightIcon className="h-5 w-5 text-muted-foreground mx-1" />
                 </li>
                 {projectId && (
                     <li className="flex items-center">
-                        <Link to={`/projects/${projectId}`} className="hover:text-accent transition-colors truncate max-w-[200px]">{projectName}</Link>
+                        <Link to={`/projects/${projectId}`} className="hover:text-accent transition-colors break-all">{projectName}</Link>
                         <ChevronRightIcon className="h-5 w-5 text-muted-foreground mx-1" />
                     </li>
                 )}
-                <li>
-                    <span className="font-semibold text-foreground">Task</span>
+                <li className="flex items-center">
+                    <span className="font-semibold text-foreground">Task Details</span>
                 </li>
                 </ol>
             </nav>
@@ -87,7 +86,7 @@ export default function TaskDetail() {
             <div className="bg-[#333333] p-6 sm:p-8 rounded-2xl border border-border">
                 {/* Header Section */}
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-border">
-                    <h1 className="text-3xl lg:text-4xl font-light text-foreground tracking-tight">
+                    <h1 className="text-3xl lg:text-4xl font-light text-foreground tracking-tight break-words">
                         {fields['Task Name']}
                     </h1>
                     <div className="flex-shrink-0 w-full sm:w-auto">
@@ -109,7 +108,7 @@ export default function TaskDetail() {
                         <FolderIcon className="h-5 w-5 text-accent mt-1 flex-shrink-0" />
                         <div>
                             <p className="text-sm text-muted-foreground font-light">Project</p>
-                            <p className="font-medium text-foreground mt-1">{projectName}</p>
+                            <p className="font-medium text-foreground mt-1 break-words">{projectName}</p>
                         </div>
                     </div>
                     <div className="flex items-start gap-4">

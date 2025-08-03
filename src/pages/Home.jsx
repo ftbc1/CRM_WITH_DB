@@ -24,14 +24,12 @@ const STATUS_COLORS = {
 
 
 export default function Home() {
-    // --- FIX: Use the correct key 'taskIdsAssigned' ---
     const userName = localStorage.getItem("userName") || "User";
     const accountIds = JSON.parse(localStorage.getItem("accountIds") || "[]");
     const projectIds = JSON.parse(localStorage.getItem("projectIds") || "[]");
     const updateIds = JSON.parse(localStorage.getItem("updateIds") || "[]");
     const taskIds = useMemo(() => JSON.parse(localStorage.getItem("taskIdsAssigned") || "[]"), []);
 
-    // --- Data Refresh Logic ---
     useEffect(() => {
         triggerDataRefresh();
         window.addEventListener('focus', triggerDataRefresh);
@@ -86,7 +84,6 @@ export default function Home() {
     return (
         <div className="w-full bg-card min-h-screen">
             <main className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                {/* --- HEADER --- */}
                 <motion.header 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -101,10 +98,7 @@ export default function Home() {
                     </p>
                 </motion.header>
 
-                {/* --- DASHBOARD GRID --- */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-                    {/* --- LEFT COLUMN: KEY METRICS --- */}
                     <motion.div 
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -136,7 +130,6 @@ export default function Home() {
                         </section>
                     </motion.div>
 
-                    {/* --- CENTER COLUMN: UPCOMING TASKS --- */}
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -156,12 +149,12 @@ export default function Home() {
                                 ) : upcomingTasks.length > 0 ? (
                                     <ul className="divide-y divide-border">
                                         {upcomingTasks.map(task => (
-                                            <li key={task.id} className="px-6 py-4 flex flex-wrap items-center justify-between gap-4 hover:bg-[#3a3a3a] transition-colors">
-                                                <div>
-                                                    <p className="font-light text-foreground">{task.fields["Task Name"]}</p>
-                                                    <p className="text-sm text-muted-foreground">{task.fields["Project Name"]?.[0] || 'N/A'}</p>
+                                            <li key={task.id} className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#3a3a3a] transition-colors">
+                                                <div className="flex-1">
+                                                    <p className="font-light text-foreground break-words">{task.fields["Task Name"]}</p>
+                                                    <p className="text-sm text-muted-foreground break-words">{task.fields["Project Name"]?.[0] || 'N/A'}</p>
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-4 self-start sm:self-center">
                                                      <div className={`text-xs font-light px-3 py-1 rounded-full ${STATUS_COLORS[task.fields.Status] || 'bg-gray-500/20 text-gray-300'}`}>
                                                         {task.fields.Status}
                                                     </div>
@@ -182,7 +175,6 @@ export default function Home() {
                         </section>
                     </motion.div>
 
-                     {/* --- RIGHT COLUMN: QUICK ACTIONS --- */}
                      <motion.div 
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
