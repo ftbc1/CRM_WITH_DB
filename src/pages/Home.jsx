@@ -152,7 +152,7 @@ export default function Home() {
                                             <li key={task.id} className="px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-[#3a3a3a] transition-colors">
                                                 <div className="flex-1 min-w-0">
                                                     <p className="font-light text-foreground break-words">{task.fields["Task Name"]}</p>
-                                                    <p className="text-sm text-muted-foreground break-words">{task.fields["Project Name"]?.[0] || 'N/A'}</p>
+                                                    <p className="text-sm text-muted-foreground break-words">{task.fields["Project Name"] || 'N/A'}</p>
                                                 </div>
                                                 <div className="flex items-center gap-4 self-start sm:self-center flex-shrink-0">
                                                      <div className={`text-xs font-light px-3 py-1 rounded-full ${STATUS_COLORS[task.fields.Status] || 'bg-gray-500/20 text-gray-300'}`}>
