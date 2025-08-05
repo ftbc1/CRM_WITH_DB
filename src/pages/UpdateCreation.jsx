@@ -1,5 +1,5 @@
 import React, { useState, Fragment, useEffect, useRef } from "react";
-import { createUpdate } from "../api";
+import { createUpdate, fetchProjectsByIds } from "../api";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { Pencil, Calendar, AlertTriangle, CheckCircle, Briefcase, ListTodo, User } from "lucide-react";
@@ -16,6 +16,7 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
+// A reusable Toast Notification component
 const Notification = ({ show, onHide, message, type }) => {
   if (!show) return null;
 
@@ -72,10 +73,9 @@ export default function UpdateCreation() {
     try {
       const projectIds = JSON.parse(localStorage.getItem("projectIds") || "[]");
       if (projectIds.length > 0) {
-        const response = await fetch(`/api/projects?ids=${projectIds.join(',')}`);
-        const projectsData = await response.json();
-        const openProjects = projectsData.filter(project => 
-            project.fields["Project Status"] !== "Closed Won" && 
+        const projectsData = await fetchProjectsByIds(projectIds);
+        const openProjects = projectsData.filter(project =>
+            project.fields["Project Status"] !== "Closed Won" &&
             project.fields["Project Status"] !== "Closed Lost"
         );
         setProjects(openProjects);
@@ -87,7 +87,6 @@ export default function UpdateCreation() {
 
   const loadProjectTasks = async (selectedProjectId) => {
     try {
-        // This is a mock API call. Replace with your actual API call.
       const response = await fetch(`/api/tasks/by-project/${selectedProjectId}`);
       const tasksData = await response.json();
       setTasks(tasksData || []);
@@ -151,6 +150,7 @@ export default function UpdateCreation() {
 
       showNotification("Update created successfully!", "success");
 
+      // Reset form
       setFields({
         "Notes": "",
         "Date": new Date().toISOString().split('T')[0],
@@ -207,7 +207,7 @@ export default function UpdateCreation() {
                         <Listbox.Button className={`relative w-full bg-secondary border ${errors['Project'] ? 'border-red-500' : 'border-border'} rounded-md shadow-sm pl-3 pr-10 py-3 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm`}>
                             <span className="flex items-center">
                                 <Briefcase className="h-5 w-5 text-muted-foreground" />
-                                <span className="ml-3 block truncate text-foreground">{fields["Project"] ? fields["Project"].project_name : "Select a project"}</span>
+                                <span className="ml-3 block truncate text-foreground">{fields["Project"] ? fields["Project"].fields["Project Name"] : "Select a project"}</span>
                             </span>
                             <span className="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                 <ChevronUpDownIcon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
@@ -219,7 +219,7 @@ export default function UpdateCreation() {
                                 <Listbox.Option key={project.id} className={({ active }) => classNames(active ? 'text-white bg-primary/20' : 'text-foreground', 'cursor-default select-none relative py-2 pl-3 pr-9')} value={project}>
                                     {({ selected, active }) => (
                                     <>
-                                        <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{project.project_name}</span>
+                                        <span className={classNames(selected ? 'font-semibold' : 'font-normal', 'block truncate')}>{project.fields["Project Name"]}</span>
                                         {selected ? (<span className={classNames(active ? 'text-white' : 'text-accent', 'absolute inset-y-0 right-0 flex items-center pr-4')}><CheckIcon className="h-5 w-5" aria-hidden="true" /></span>) : null}
                                     </>
                                     )}
@@ -264,6 +264,7 @@ export default function UpdateCreation() {
                 </Listbox>
             </div>
 
+            {/* New Disabled Update Owner Field */}
             <div>
                 <label htmlFor="update-owner" className="block text-sm font-light text-muted-foreground mb-1">Update Owner</label>
                 <div className="relative">
