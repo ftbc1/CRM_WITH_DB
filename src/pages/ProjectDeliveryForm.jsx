@@ -8,7 +8,7 @@ import { CheckCircle, AlertTriangle } from 'lucide-react';
 import { api, triggerDataRefresh } from '../api';
 
 // --- NEW: Add the URL for your new Cloud Function here ---
-const NOTIFICATION_FUNCTION_URL = "YOUR_NEW_CLOUD_FUNCTION_TRIGGER_URL"; // <-- IMPORTANT: Replace with your actual URL after deployment
+const NOTIFICATION_FUNCTION_URL = "https://asia-south1-first-infinity-463811-g1.cloudfunctions.net/order-notifier";
 
 // Helper to convert 'Yes'/'No'/'N/A' to boolean/null for backend
 const convertToBooleanOrNull = (value) => {
