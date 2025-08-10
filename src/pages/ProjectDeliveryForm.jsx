@@ -7,6 +7,9 @@ import { CheckIcon, ChevronUpDownIcon, XMarkIcon } from '@heroicons/react/20/sol
 import { CheckCircle, AlertTriangle } from 'lucide-react';
 import { api, triggerDataRefresh } from '../api';
 
+// --- NEW: Add the URL for your new Cloud Function here ---
+const NOTIFICATION_FUNCTION_URL = "YOUR_NEW_CLOUD_FUNCTION_TRIGGER_URL"; // <-- IMPORTANT: Replace with your actual URL after deployment
+
 // Helper to convert 'Yes'/'No'/'N/A' to boolean/null for backend
 const convertToBooleanOrNull = (value) => {
   if (value === 'Yes') return true;
@@ -20,6 +23,34 @@ const convertBooleanToDisplay = (value) => {
   if (value === false) return 'No';
   return 'N/A';
 };
+
+// --- NEW: Function to send notification ---
+const sendNotificationEmail = async (orderData, project, isUpdate) => {
+  if (!NOTIFICATION_FUNCTION_URL.startsWith('https://')) {
+    console.warn('Notification function URL is not set. Skipping email notification.');
+    return;
+  }
+
+  const payload = {
+    order_details: orderData,
+    project_name: project?.project_name || 'N/A',
+    sales_executive_name: localStorage.getItem('userName') || 'N/A'
+  };
+
+  try {
+    await fetch(NOTIFICATION_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    console.log(`Order ${isUpdate ? 'update' : 'creation'} notification sent successfully.`);
+  } catch (error) {
+    console.error('Failed to send notification email:', error);
+  }
+};
+
 
 // Reusable Notification Component
 const Notification = ({ show, onHide, message, type }) => {
@@ -222,8 +253,10 @@ export default function ProjectDeliveryForm() {
       const response = await api.post('/delivery-status', payload);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       triggerDataRefresh();
+      const projectForEmail = projects.find(p => p.id === variables.crm_project_id);
+      sendNotificationEmail(variables, projectForEmail, false); // Send email on success
       showNotification('Delivery status created successfully!');
       setTimeout(() => navigate(-1), 2000);
     },
@@ -245,8 +278,10 @@ export default function ProjectDeliveryForm() {
       const response = await api.put(`/delivery-status/${id}`, payload);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       triggerDataRefresh();
+      const projectForEmail = projects.find(p => p.id === variables.updatedStatus.crm_project_id);
+      sendNotificationEmail(variables.updatedStatus, projectForEmail, true); // Send email on success
       showNotification('Delivery status updated successfully!');
       setTimeout(() => navigate(-1), 2000);
     },
